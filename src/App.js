@@ -3,6 +3,32 @@ import './App.css';
 import * as _ from "lodash";
 
 
+class PlayerForm extends Component {
+
+    handleSubmit = (e) => {
+        e.preventDefault();
+        let inputField = document.getElementById("player_name");
+        let name = inputField.value;
+        inputField.value = null;
+        this.props.onSubmit(name);
+    };
+
+    render() {
+        return (
+            <form onSubmit={this.handleSubmit}>
+                <div className="input-group">
+                    <input className="form-control" id="player_name" name="player_name" placeholder="Enter Name" required autoFocus={true} />
+                    <span className="input-group-btn">
+                        <button className="btn btn-primary" type="submit">
+                            Add Player
+                        </button>
+                    </span>
+                </div>
+            </form>
+        );
+    }
+}
+
 class BallGrid extends Component {
     render() {
         let buttons = [];
@@ -61,32 +87,17 @@ class App extends Component {
 
     constructor(props) {
         super(props);
-        const balls = {};
-        const players = [];
-        const names = 'ABCDE';
-        for (let i = 0; i < names.length; i++) {
-            players.push({
-                name: names[i],
-                points: 0,
-                active: true
-            });
-        }
+        this.state = this.defaultGameState();
+    }
 
-        for (let i = 1; i <= this.ballCount; i++) {
-            balls[i] = {
-                active: true,
-                points: (i < 3 ? i + this.ballCount : (i === 3 ? 6 : i))
-            }
-        }
-
-        this.state = {
-            players: players,
-            balls: balls,
-            currentBall: 3,
-            currentPlayer: 0,
-            ballGridActive: false,
-            ballGridLegal: null
-        }
+    addPlayer = (name) => {
+        const players = this.state.players;
+        players.push({
+            name: name,
+            active: true,
+            points: 0
+        });
+        this.setState({ players: players });
     }
 
     getNextBall = (balls) => {
@@ -158,35 +169,88 @@ class App extends Component {
         });
     };
 
+    startGame = () => {
+        this.setState({
+            gameStarted: true
+        });
+    };
+
+    defaultGameState = () =>  {
+        const balls = {};
+
+        for (let i = 1; i <= this.ballCount; i++) {
+            balls[i] = {
+                active: true,
+                points: (i < 3 ? i + this.ballCount : (i === 3 ? 6 : i))
+            }
+        }
+
+        return {
+            players: [],
+            balls: balls,
+            currentBall: 3,
+            currentPlayer: 0,
+            ballGridActive: false,
+            ballGridLegal: null,
+            gameStarted: false
+        };
+    }
+
+    resetGame = () => {
+        this.setState(this.defaultGameState());
+    };
+
     render() {
+        let display;
+        if (this.state.gameStarted) {
+            display = (
+                <div className="col-sm-6">
+                    <h3>Current Player: {this.state.players[this.state.currentPlayer].name}</h3>
+                    <h3>Current Ball: {this.state.currentBall}</h3>
+                    <button onClick={() => this.showBallGrid(true)}
+                            className="btn btn-success btn-lg btn-block">
+                        Port
+                    </button>
+                    {this.state.ballGridActive && this.state.ballGridLegal ?
+                        <BallGrid balls={this.state.balls} legal={true} onClick={this.port}/> :
+                        null
+                    }
+                    <button onClick={this.hit} className="btn btn-info btn-lg btn-block">Hit</button>
+                    <button onClick={this.miss} className="btn btn-danger btn-lg btn-block">Miss</button>
+                    <button onClick={() => this.showBallGrid(false) }
+                            className={'btn btn-danger btn-lg btn-block' + (this.state.ballGridActive ? ' active' : '')}>
+                        Foul Hit
+                    </button>
+                    {this.state.ballGridActive && !this.state.ballGridLegal ?
+                        <BallGrid balls={this.state.balls} legal={false} onClick={this.foulHit}/> :
+                        null
+                    }
+                </div>
+
+            );
+        }
+        else {
+            display = (
+                <div className="col-sm-6">
+                    <h3>Add Players</h3>
+                    <PlayerForm onSubmit={this.addPlayer}/>
+                    <br/>
+                    { this.state.players.length > 0
+                        ? <button onClick={this.startGame} className="btn btn-block btn-outline-primary">Start Game</button>
+                        : null }
+                </div>
+            );
+        }
 
         return (
             <div className="container">
                 <div className="row">
-                    <div className="col-sm-6">
-                        <h3>Current Player: {this.state.players[this.state.currentPlayer].name}</h3>
-                        <h3>Current Ball: {this.state.currentBall}</h3>
-                        <button onClick={() => this.showBallGrid(true)}
-                                className="btn btn-success btn-lg btn-block">
-                            Port
-                        </button>
-                        {this.state.ballGridActive && this.state.ballGridLegal ?
-                            <BallGrid balls={this.state.balls} legal={true} onClick={this.port}/> :
-                            null
-                        }
-                        <button onClick={this.hit} className="btn btn-info btn-lg btn-block">Hit</button>
-                        <button onClick={this.miss} className="btn btn-danger btn-lg btn-block">Miss</button>
-                        <button onClick={() => this.showBallGrid(false) }
-                                className={'btn btn-danger btn-lg btn-block' + (this.state.ballGridActive ? ' active' : '')}>
-                            Foul Hit
-                        </button>
-                        {this.state.ballGridActive && !this.state.ballGridLegal ?
-                            <BallGrid balls={this.state.balls} legal={false} onClick={this.foulHit}/> :
-                            null
-                        }
-                    </div>
+                    { display }
                     <div className="col-sm-3">
                         <PlayerList players={this.state.players} currentPlayer={this.state.currentPlayer}/>
+                        {this.state.gameStarted
+                            ? <button onClick={this.resetGame} className="btn btn-block btn-outline-primary">New Game</button>
+                            : null }
                     </div>
                 </div>
             </div>
