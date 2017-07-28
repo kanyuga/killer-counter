@@ -1,6 +1,15 @@
 #root {
   margin-top: 10px;
 }
+
+.current-player {
+  font-weight: bold;
+}
+
+.eliminated-player {
+  text-decoration: line-through;
+}
+
 .btn-ball {
   margin: 10px;
   border-radius: 50%;

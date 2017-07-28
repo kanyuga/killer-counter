@@ -67,11 +67,11 @@ class PlayerList extends Component {
                 <table className="table">
                     <tbody>
                     {this.props.players.map((player, i) => {
-                        let className = !player.active ? 'text-muted' : (i === this.props.currentPlayer ? 'table-info' : '');
+                        let className = !player.active ? 'text-muted eliminated-player' : (i === this.props.currentPlayer ? 'table-info current-player' : '');
 
                         return <tr key={i} className={className}>
-                            <th>{player.name}:</th>
-                            <td>{player.points}</td>
+                            <td>{player.name}:</td>
+                            <td className="text-right">{player.points}</td>
                         </tr>
                     })}
                     </tbody>
@@ -90,6 +90,33 @@ class App extends Component {
         this.state = this.defaultGameState();
     }
 
+    maxScore = (players) => {
+        let maxScore = players[0].points;
+        _.forEach(players, (player) => {
+            maxScore = Math.max(maxScore, player.points);
+        });
+        return maxScore;
+    };
+
+    pointsLeft = (balls) => {
+        let pointsLeft = 0;
+        for (let i = 1; i <= this.ballCount; i++) {
+            if (balls[i].active) {
+                pointsLeft += balls[i].points;
+            }
+        }
+        return pointsLeft;
+    };
+
+    refreshActivePlayers(players, balls) {
+        const maxScore = this.maxScore(players);
+        const pointsLeft = this.pointsLeft(balls);
+        for (let i = 0; i < players.length; i++) {
+            players[i].active = (players[i].points + pointsLeft) > maxScore;
+        }
+        return players;
+    }
+
     addPlayer = (name) => {
         const players = this.state.players;
         players.push({
@@ -98,12 +125,14 @@ class App extends Component {
             points: 0
         });
         this.setState({ players: players });
-    }
+    };
 
     getNextBall = (balls) => {
         let nextBall = this.state.currentBall;
-        while (!balls[nextBall].active) {
+        let counter = 0;
+        while (!balls[nextBall].active && counter < this.ballCount) {
             nextBall = (nextBall % this.ballCount) + 1;
+            counter++;
         }
         return nextBall;
     };
@@ -118,16 +147,17 @@ class App extends Component {
 
     hit = () => {
         this.setState({
-            currentPlayer: (this.state.currentPlayer + 1) % this.state.players.length,
+            currentPlayer: this.getNextPlayer(this.state.players),
             ballGridActive: false
         });
     };
 
     foulHit = (number) => {
         const foulBall = this.state.balls[number];
-        const players = this.state.players.slice();
+        let players = this.state.players.slice();
         const current_player = players[this.state.currentPlayer];
         current_player.points -= foulBall.points;
+        players = this.refreshActivePlayers(players, this.state.balls);
         this.setState({
             players: players,
             currentPlayer: this.getNextPlayer(players),
@@ -137,12 +167,13 @@ class App extends Component {
     };
 
     port = (number) => {
-        const players = this.state.players.slice();
+        let players = this.state.players.slice();
         const balls = Object.assign({}, this.state.balls);
         const current_player = players[this.state.currentPlayer];
         const ported_ball = balls[number];
         current_player.points += ported_ball.points;
         ported_ball.active = false;
+        players = this.refreshActivePlayers(players, balls);
         this.setState({
             players: players,
             balls: balls,
@@ -156,17 +187,27 @@ class App extends Component {
     };
 
     miss = () => {
-        const players = this.state.players.slice();
+        let players = this.state.players.slice();
         const balls = Object.assign({}, this.state.balls);
         const current_player = players[this.state.currentPlayer];
         const current_ball = balls[this.state.currentBall];
         current_player.points -= current_ball.points;
+        players = this.refreshActivePlayers(players, balls);
         this.setState({
             players: players,
             balls: balls,
             currentPlayer: this.getNextPlayer(players),
             ballGridActive: false
         });
+    };
+
+    winner = () => {
+        const maxScore = this.maxScore(this.state.players);
+        return this.state.players.filter((player) => player.points === maxScore)[0];
+    };
+
+    gameOver = () => {
+        return this.pointsLeft(this.state.balls) === 0;
     };
 
     startGame = () => {
@@ -194,7 +235,7 @@ class App extends Component {
             ballGridLegal: null,
             gameStarted: false
         };
-    }
+    };
 
     resetGame = () => {
         this.setState(this.defaultGameState());
@@ -203,35 +244,44 @@ class App extends Component {
     render() {
         let display;
         if (this.state.gameStarted) {
-            display = (
-                <div className="col-sm-6">
-                    <h3>Current Player: {this.state.players[this.state.currentPlayer].name}</h3>
-                    <h3>Current Ball: {this.state.currentBall}</h3>
-                    <button onClick={() => this.showBallGrid(true)}
-                            className="btn btn-success btn-lg btn-block">
-                        Port
-                    </button>
-                    {this.state.ballGridActive && this.state.ballGridLegal ?
-                        <BallGrid balls={this.state.balls} legal={true} onClick={this.port}/> :
-                        null
-                    }
-                    <button onClick={this.hit} className="btn btn-info btn-lg btn-block">Hit</button>
-                    <button onClick={this.miss} className="btn btn-danger btn-lg btn-block">Miss</button>
-                    <button onClick={() => this.showBallGrid(false) }
-                            className={'btn btn-danger btn-lg btn-block' + (this.state.ballGridActive ? ' active' : '')}>
-                        Foul Hit
-                    </button>
-                    {this.state.ballGridActive && !this.state.ballGridLegal ?
-                        <BallGrid balls={this.state.balls} legal={false} onClick={this.foulHit}/> :
-                        null
-                    }
-                </div>
+            if (this.gameOver()) {
+                display = (
+                    <div>
+                        <h1>{this.winner().name} Wins!</h1>
+                    </div>
+                );
+            } else {
+                display = (
+                    <div>
+                        <h3>Current Player: {this.state.players[this.state.currentPlayer].name}</h3>
+                        <h3>Current Ball: {this.state.currentBall}</h3>
+                        <h3>Points Left: {this.pointsLeft(this.state.balls)}</h3>
+                        <button onClick={() => this.showBallGrid(true)}
+                                className="btn btn-success btn-lg btn-block">
+                            Port
+                        </button>
+                        {this.state.ballGridActive && this.state.ballGridLegal ?
+                            <BallGrid balls={this.state.balls} legal={true} onClick={this.port}/> :
+                            null
+                        }
+                        <button onClick={this.hit} className="btn btn-info btn-lg btn-block">Hit</button>
+                        <button onClick={this.miss} className="btn btn-danger btn-lg btn-block">Miss</button>
+                        <button onClick={() => this.showBallGrid(false)}
+                                className={'btn btn-danger btn-lg btn-block' + (this.state.ballGridActive ? ' active' : '')}>
+                            Foul Hit
+                        </button>
+                        {this.state.ballGridActive && !this.state.ballGridLegal ?
+                            <BallGrid balls={this.state.balls} legal={false} onClick={this.foulHit}/> :
+                            null
+                        }
+                    </div>
 
-            );
+                );
+            }
         }
         else {
             display = (
-                <div className="col-sm-6">
+                <div>
                     <h3>Add Players</h3>
                     <PlayerForm onSubmit={this.addPlayer}/>
                     <br/>
@@ -245,7 +295,9 @@ class App extends Component {
         return (
             <div className="container">
                 <div className="row">
+                    <div className="col-sm-6">
                     { display }
+                    </div>
                     <div className="col-sm-3">
                         <PlayerList players={this.state.players} currentPlayer={this.state.currentPlayer}/>
                         {this.state.gameStarted
