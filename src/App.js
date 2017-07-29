@@ -36,7 +36,7 @@ class BallGrid extends Component {
         const className = this.props.legal ? 'btn-outline-success' : 'btn-outline-warning';
 
         _.forOwn(this.props.balls, (ball, number) =>
-            buttons.push(<div key={number} className="col-sm-4 text-center">
+            buttons.push(<div key={number} className="col-4 text-center">
                 <button
                     className={'btn btn-ball ' + (ball.active ? className : 'btn-disabled')}
                     disabled={ !ball.active }
@@ -112,7 +112,7 @@ class App extends Component {
         const maxScore = this.maxScore(players);
         const pointsLeft = this.pointsLeft(balls);
         for (let i = 0; i < players.length; i++) {
-            players[i].active = (players[i].points + pointsLeft) > maxScore;
+            players[i].active = (players[i].points + pointsLeft) >= maxScore;
         }
         return players;
     }
@@ -246,16 +246,16 @@ class App extends Component {
         if (this.state.gameStarted) {
             if (this.gameOver()) {
                 display = (
-                    <div>
+                    <div className="action-section">
                         <h1>{this.winner().name} Wins!</h1>
                     </div>
                 );
             } else {
                 display = (
-                    <div>
+                    <div className="action-section">
                         <h3>Current Player: {this.state.players[this.state.currentPlayer].name}</h3>
                         <h3>Current Ball: {this.state.currentBall}</h3>
-                        <h3>Points Left: {this.pointsLeft(this.state.balls)}</h3>
+
                         <button onClick={() => this.showBallGrid(true)}
                                 className="btn btn-success btn-lg btn-block">
                             Port
@@ -274,6 +274,7 @@ class App extends Component {
                             <BallGrid balls={this.state.balls} legal={false} onClick={this.foulHit}/> :
                             null
                         }
+
                     </div>
 
                 );
@@ -281,10 +282,10 @@ class App extends Component {
         }
         else {
             display = (
-                <div>
+                <div className="action-section">
                     <h3>Add Players</h3>
                     <PlayerForm onSubmit={this.addPlayer}/>
-                    <br/>
+
                     { this.state.players.length > 0
                         ? <button onClick={this.startGame} className="btn btn-block btn-outline-primary">Start Game</button>
                         : null }
@@ -298,8 +299,9 @@ class App extends Component {
                     <div className="col-sm-6">
                     { display }
                     </div>
-                    <div className="col-sm-3">
+                    <div className="col-sm-6">
                         <PlayerList players={this.state.players} currentPlayer={this.state.currentPlayer}/>
+
                         {this.state.gameStarted
                             ? <button onClick={this.resetGame} className="btn btn-block btn-outline-primary">New Game</button>
                             : null }
