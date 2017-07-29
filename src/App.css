@@ -1,5 +1,13 @@
 #root {
-  margin-top: 10px;
+  margin: 10px 0;
+}
+
+.action-section {
+  margin-bottom: 10px;
+}
+
+.action-section form {
+  margin-bottom: 10px;
 }
 
 .current-player {
