@@ -19,7 +19,7 @@ const Button = (props) => {
         classNames.push('btn-' + props.size);
     }
 
-    return <button onClick={this.onClick} className = {classNames}> {props.label} </button>;
+    return <button onClick={props.onClick} className = {classNames.join(' ')}> {props.title} </button>;
 };
 
 class PlayerForm extends Component {
