@@ -3,6 +3,25 @@ import './App.css';
 import * as _ from "lodash";
 
 
+const Button = (props) => {
+    let classNames = ['btn'];
+    if (props.hasOwnProperty('block') && props.block) {
+        classNames.push('btn-block');
+    }
+    if (props.hasOwnProperty('context') && props.context) {
+        let context = props.context;
+        if (props.outline) {
+            context = 'outline-' + props.context;
+        }
+        classNames.push('btn-' + context);
+    }
+    if (props.size) {
+        classNames.push('btn-' + props.size);
+    }
+
+    return <button onClick={this.onClick} className = {classNames}> {props.label} </button>;
+};
+
 class PlayerForm extends Component {
 
     handleSubmit = (e) => {
@@ -17,7 +36,12 @@ class PlayerForm extends Component {
         return (
             <form onSubmit={this.handleSubmit}>
                 <div className="input-group">
-                    <input className="form-control" id="player_name" name="player_name" placeholder="Enter Name" required autoFocus={true} />
+                    <input className="form-control"
+                           id="player_name"
+                           name="player_name"
+                           placeholder="Enter Name"
+                           required
+                           autoFocus={true} />
                     <span className="input-group-btn">
                         <button className="btn btn-primary" type="submit">
                             Add Player
@@ -29,57 +53,54 @@ class PlayerForm extends Component {
     }
 }
 
-class BallGrid extends Component {
-    render() {
-        let buttons = [];
+const BallGrid = (props) => {
+    let buttons = [];
 
-        const className = this.props.legal ? 'btn-outline-success' : 'btn-outline-warning';
+    const className = props.legal ? 'btn-outline-success' : 'btn-outline-warning';
 
-        _.forOwn(this.props.balls, (ball, number) =>
-            buttons.push(<div key={number} className="col-4 text-center">
-                <button
-                    className={'btn btn-ball ' + (ball.active ? className : 'btn-disabled')}
-                    disabled={ !ball.active }
-                    onClick={() => { this.props.onClick(number)}} >
-                    {number}
-                </button>
-            </div>)
-        );
+    _.forOwn(props.balls, (ball, number) =>
+        buttons.push(<div key={number} className="col-4 text-center">
+            <button
+                className={'btn btn-ball ' + (ball.active ? className : 'btn-disabled')}
+                disabled={ !ball.active }
+                onClick={() => { props.onClick(number)}} >
+                {number}
+            </button>
+        </div>)
+    );
 
-        //push 1 & 2 to the end
+    //push 1 & 2 to the end
 
-        buttons = buttons.slice(2).concat(buttons.slice(0, 2));
+    buttons = buttons.slice(2).concat(buttons.slice(0, 2));
 
-        return (
-            <div className="row">
-                {buttons}
-            </div>
-        );
-    }
-}
+    return (
+        <div className="row">
+            {buttons}
+        </div>
+    );
+};
 
-class PlayerList extends Component {
-    render() {
+const PlayerList = (props) => {
+    return (
+        <div>
+            <h3>Score Card</h3>
+            <table className="table">
+                <tbody>
+                {props.players.map((player, i) => {
+                    let className = !player.active
+                        ? 'text-muted eliminated-player'
+                        : (i === props.currentPlayer ? 'table-info current-player' : '');
 
-        return (
-            <div>
-                <h3>Score Card</h3>
-                <table className="table">
-                    <tbody>
-                    {this.props.players.map((player, i) => {
-                        let className = !player.active ? 'text-muted eliminated-player' : (i === this.props.currentPlayer ? 'table-info current-player' : '');
-
-                        return <tr key={i} className={className}>
-                            <td>{player.name}:</td>
-                            <td className="text-right">{player.points}</td>
-                        </tr>
-                    })}
-                    </tbody>
-                </table>
-            </div>
-        );
-    }
-}
+                    return <tr key={i} className={className}>
+                        <td>{player.name}:</td>
+                        <td className="text-right">{player.points}</td>
+                    </tr>
+                })}
+                </tbody>
+            </table>
+        </div>
+    );
+};
 
 class App extends Component {
 
@@ -89,6 +110,39 @@ class App extends Component {
         super(props);
         this.state = this.defaultGameState();
     }
+
+    defaultGameState = () =>  {
+        const balls = {};
+
+        for (let i = 1; i <= this.ballCount; i++) {
+            balls[i] = {
+                active: true,
+                points: (i < 3 ? i + this.ballCount : (i === 3 ? 6 : i))
+            }
+        }
+
+        return {
+            players: [],
+            balls: balls,
+            currentBall: 3,
+            currentPlayer: 0,
+            ballGridActive: false,
+            ballGridLegal: null,
+            gameStarted: false,
+            playLog: [],
+            history: []
+        };
+    };
+
+    setGameState = (newState) => {
+        const history = this.state.history.slice();
+        let newHistoryEntry = Object.assign(_.cloneDeep(this.state), newState);
+        delete newHistoryEntry.history;
+        //stringify to remove references. cloneDeep didn't work here for an unknown reason
+        history.push(JSON.stringify(newHistoryEntry));
+        newState.history = history;
+        this.setState(newState);
+    };
 
     maxScore = (players) => {
         let maxScore = players[0].points;
@@ -108,17 +162,17 @@ class App extends Component {
         return pointsLeft;
     };
 
-    refreshActivePlayers(players, balls) {
+    refreshActivePlayers = (players, balls)  => {
         const maxScore = this.maxScore(players);
         const pointsLeft = this.pointsLeft(balls);
         for (let i = 0; i < players.length; i++) {
             players[i].active = (players[i].points + pointsLeft) >= maxScore;
         }
         return players;
-    }
+    };
 
     addPlayer = (name) => {
-        const players = this.state.players;
+        const players = this.state.players.slice();
         players.push({
             name: name,
             active: true,
@@ -145,59 +199,63 @@ class App extends Component {
         return nextPlayer;
     };
 
+    showBallGrid = (legalPort) => {
+        this.setState({ballGridActive: true, ballGridLegal: legalPort});
+    };
+
     hit = () => {
-        this.setState({
+        const current_player = this.state.players[this.state.currentPlayer];
+        this.setGameState({
             currentPlayer: this.getNextPlayer(this.state.players),
-            ballGridActive: false
+            ballGridActive: false,
+            playLog: this.addLogEntry(current_player.name + ' hit ' + this.state.currentBall)
         });
     };
 
     foulHit = (number) => {
         const foulBall = this.state.balls[number];
         let players = this.state.players.slice();
-        const current_player = players[this.state.currentPlayer];
-        current_player.points -= foulBall.points;
+        const currentPlayer = players[this.state.currentPlayer];
+        currentPlayer.points -= foulBall.points;
         players = this.refreshActivePlayers(players, this.state.balls);
-        this.setState({
+        this.setGameState({
             players: players,
             currentPlayer: this.getNextPlayer(players),
-            ballGridActive: false
+            ballGridActive: false,
+            playLog: this.addLogEntry(currentPlayer.name + ' foul hit ' + number)
         })
-
     };
 
     port = (number) => {
         let players = this.state.players.slice();
         const balls = Object.assign({}, this.state.balls);
-        const current_player = players[this.state.currentPlayer];
-        const ported_ball = balls[number];
-        current_player.points += ported_ball.points;
-        ported_ball.active = false;
+        const currentPlayer = players[this.state.currentPlayer];
+        const portedBall = balls[number];
+        currentPlayer.points += portedBall.points;
+        portedBall.active = false;
         players = this.refreshActivePlayers(players, balls);
-        this.setState({
+        this.setGameState({
             players: players,
             balls: balls,
             currentBall: this.getNextBall(balls),
-            ballGridActive: false
+            ballGridActive: false,
+            playLog: this.addLogEntry(currentPlayer.name + ' ported ' + number)
         });
-    };
-
-    showBallGrid = (legalPort) => {
-        this.setState({ballGridActive: true, ballGridLegal: legalPort});
     };
 
     miss = () => {
         let players = this.state.players.slice();
         const balls = Object.assign({}, this.state.balls);
-        const current_player = players[this.state.currentPlayer];
-        const current_ball = balls[this.state.currentBall];
-        current_player.points -= current_ball.points;
+        const currentPlayer = players[this.state.currentPlayer];
+        const missedBall = balls[this.state.currentBall];
+        currentPlayer.points -= missedBall.points;
         players = this.refreshActivePlayers(players, balls);
-        this.setState({
+        this.setGameState({
             players: players,
             balls: balls,
             currentPlayer: this.getNextPlayer(players),
-            ballGridActive: false
+            ballGridActive: false,
+            playLog: this.addLogEntry(currentPlayer.name + ' missed ' + this.state.currentBall)
         });
     };
 
@@ -211,30 +269,23 @@ class App extends Component {
     };
 
     startGame = () => {
-        this.setState({
-            gameStarted: true
+        this.setGameState({
+            gameStarted: true,
+            playLog: this.addLogEntry("Game Started")
         });
     };
 
-    defaultGameState = () =>  {
-        const balls = {};
+    addLogEntry = (logEntry) => {
+        const playLog = this.state.playLog.slice();
+        playLog.push(logEntry);
+        return playLog;
+    };
 
-        for (let i = 1; i <= this.ballCount; i++) {
-            balls[i] = {
-                active: true,
-                points: (i < 3 ? i + this.ballCount : (i === 3 ? 6 : i))
-            }
-        }
-
-        return {
-            players: [],
-            balls: balls,
-            currentBall: 3,
-            currentPlayer: 0,
-            ballGridActive: false,
-            ballGridLegal: null,
-            gameStarted: false
-        };
+    undo = () => {
+        const history = this.state.history.slice(0, -1);
+        const prevState = JSON.parse(history[history.length - 1]);
+        prevState.history = history;
+        this.setState(prevState);
     };
 
     resetGame = () => {
@@ -256,21 +307,15 @@ class App extends Component {
                         <h3>Current Player: {this.state.players[this.state.currentPlayer].name}</h3>
                         <h3>Current Ball: {this.state.currentBall}</h3>
 
-                        <button onClick={() => this.showBallGrid(true)}
-                                className="btn btn-success btn-lg btn-block">
-                            Port
-                        </button>
+                        <Button onClick={() => this.showBallGrid(true)} size="lg" block context="success" title="Port"/>
                         {this.state.ballGridActive && this.state.ballGridLegal ?
                             <BallGrid balls={this.state.balls} legal={true} onClick={this.port}/> :
                             null
                         }
-                        <button onClick={this.hit} className="btn btn-info btn-lg btn-block">Hit</button>
-                        <button onClick={this.miss} className="btn btn-danger btn-lg btn-block">Miss</button>
-                        <button onClick={() => this.showBallGrid(false)}
-                                className={'btn btn-danger btn-lg btn-block' + (this.state.ballGridActive ? ' active' : '')}>
-                            Foul Hit
-                        </button>
-                        {this.state.ballGridActive && !this.state.ballGridLegal ?
+                        <Button onClick={this.hit} size="lg" block context="info" title="Hit" />
+                        <Button onClick={this.miss} size="lg" block context="danger" title="Miss" />
+                        <Button onClick={() => this.showBallGrid(false)} size="lg" block context="danger" title="Foul Hit" />
+                        { this.state.ballGridActive && !this.state.ballGridLegal ?
                             <BallGrid balls={this.state.balls} legal={false} onClick={this.foulHit}/> :
                             null
                         }
@@ -287,7 +332,7 @@ class App extends Component {
                     <PlayerForm onSubmit={this.addPlayer}/>
 
                     { this.state.players.length > 0
-                        ? <button onClick={this.startGame} className="btn btn-block btn-outline-primary">Start Game</button>
+                        ? <Button onClick={this.startGame} block outline context="primary" title="Start Game"/>
                         : null }
                 </div>
             );
@@ -299,12 +344,21 @@ class App extends Component {
                     <div className="col-sm-6">
                     { display }
                     </div>
-                    <div className="col-sm-6">
+                    <div className="col-6 col-sm-3">
                         <PlayerList players={this.state.players} currentPlayer={this.state.currentPlayer}/>
-
                         {this.state.gameStarted
-                            ? <button onClick={this.resetGame} className="btn btn-block btn-outline-primary">New Game</button>
+                            ? <Button onClick = {this.resetGame} block outline context="primary" title="New Game"/>
                             : null }
+                    </div>
+                    <div className="col-6 col-sm-3">
+                        <h3>Log</h3>
+                        <ul>
+                            {this.state.playLog.map((playLog) => <li>{ playLog }</li>)}
+                        </ul>
+                        { this.state.history.length > 1
+                            ? <Button onClick = { this.undo } block outline context="warning" title='Undo'/>
+                            : null
+                        }
                     </div>
                 </div>
             </div>
