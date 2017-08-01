@@ -1,9 +1,10 @@
 import React, {Component} from 'react';
+import PropTypes from 'prop-types';
 import './App.css';
 import * as _ from "lodash";
 
 
-const Button = (props) => {
+export const Button = (props) => {
     let classNames = ['btn'];
     if (props.hasOwnProperty('block') && props.block) {
         classNames.push('btn-block');
@@ -15,14 +16,22 @@ const Button = (props) => {
         }
         classNames.push('btn-' + context);
     }
-    if (props.size) {
+    if (props.hasOwnProperty('size') && props.size) {
         classNames.push('btn-' + props.size);
     }
 
     return <button onClick={props.onClick} className = {classNames.join(' ')}> {props.title} </button>;
 };
 
-class PlayerForm extends Component {
+Button.propTypes = {
+    block: PropTypes.bool,
+    outline: PropTypes.bool,
+    context: PropTypes.oneOf(['primary', 'secondary', 'success', 'info', 'warning', 'link', 'danger']),
+    size: PropTypes.oneOf(['lg', 'sm']),
+    title: PropTypes.string.isRequired
+};
+
+export class PlayerForm extends Component {
 
     handleSubmit = (e) => {
         e.preventDefault();
@@ -41,7 +50,7 @@ class PlayerForm extends Component {
                            name="player_name"
                            placeholder="Enter Name"
                            required
-                           autoFocus={true} />
+                           autoFocus />
                     <span className="input-group-btn">
                         <button className="btn btn-primary" type="submit">
                             Add Player
@@ -53,7 +62,11 @@ class PlayerForm extends Component {
     }
 }
 
-const BallGrid = (props) => {
+PlayerForm.propTypes = {
+    onSubmit: PropTypes.func.isRequired
+};
+
+export const BallGrid = (props) => {
     let buttons = [];
 
     const className = props.legal ? 'btn-outline-success' : 'btn-outline-warning';
@@ -80,16 +93,23 @@ const BallGrid = (props) => {
     );
 };
 
-const PlayerList = (props) => {
+BallGrid.propTypes = {
+    onClick: PropTypes.func.isRequired,
+    balls: PropTypes.shape().isRequired
+
+};
+
+
+export const PlayerList = (props) => {
     return (
         <div>
             <h3>Score Card</h3>
-            <table className="table">
+            <table className="table table-inverse">
                 <tbody>
                 {props.players.map((player, i) => {
                     let className = !player.active
                         ? 'text-muted eliminated-player'
-                        : (i === props.currentPlayer ? 'table-info current-player' : '');
+                        : (i === props.currentPlayer ? 'bg-info current-player' : '');
 
                     return <tr key={i} className={className}>
                         <td>{player.name}:</td>
