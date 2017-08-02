@@ -6,21 +6,21 @@ import * as _ from "lodash";
 
 export const Button = (props) => {
     let classNames = ['btn'];
-    if (props.hasOwnProperty('block') && props.block) {
+    if (props.block) {
         classNames.push('btn-block');
     }
-    if (props.hasOwnProperty('context') && props.context) {
+    if (props.context) {
         let context = props.context;
         if (props.outline) {
             context = 'outline-' + props.context;
         }
         classNames.push('btn-' + context);
     }
-    if (props.hasOwnProperty('size') && props.size) {
+    if (props.size) {
         classNames.push('btn-' + props.size);
     }
 
-    return <button onClick={props.onClick} className = {classNames.join(' ')}> {props.title} </button>;
+    return <button onClick={props.onClick} className={classNames.join(' ')}> {props.title} </button>;
 };
 
 Button.propTypes = {
@@ -32,13 +32,22 @@ Button.propTypes = {
 };
 
 export class PlayerForm extends Component {
+    constructor (props) {
+        super(props);
+        this.state = {
+            name: ''
+        };
+    }
+
+    handleChange = (e) => {
+        this.setState({ name: e.target.value });
+    };
+
 
     handleSubmit = (e) => {
         e.preventDefault();
-        let inputField = document.getElementById("player_name");
-        let name = inputField.value;
-        inputField.value = null;
-        this.props.onSubmit(name);
+        this.props.onSubmit(this.state.name);
+        this.setState({ name: '' });
     };
 
     render() {
@@ -50,7 +59,10 @@ export class PlayerForm extends Component {
                            name="player_name"
                            placeholder="Enter Name"
                            required
-                           autoFocus />
+                           autoFocus
+                           value={this.state.name}
+                           onChange={this.handleChange}
+                    />
                     <span className="input-group-btn">
                         <button className="btn btn-primary" type="submit">
                             Add Player
@@ -158,7 +170,7 @@ class App extends Component {
         const history = this.state.history.slice();
         let newHistoryEntry = Object.assign(_.cloneDeep(this.state), newState);
         delete newHistoryEntry.history;
-        //stringify to remove references. cloneDeep didn't work here for an unknown reason
+        //stringify to remove references. _.cloneDeep didn't work here for an unknown reason
         history.push(JSON.stringify(newHistoryEntry));
         newState.history = history;
         this.setState(newState);
@@ -373,7 +385,7 @@ class App extends Component {
                     <div className="col-6 col-sm-3">
                         <h3>Log</h3>
                         <ul>
-                            {this.state.playLog.map((playLog) => <li>{ playLog }</li>)}
+                            {this.state.playLog.map((playLog, i) => <li key={i}>{ playLog }</li>)}
                         </ul>
                         { this.state.history.length > 1
                             ? <Button onClick = { this.undo } block outline context="warning" title='Undo'/>

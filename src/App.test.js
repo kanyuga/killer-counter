@@ -3,12 +3,12 @@ import ReactDOM from 'react-dom';
 import App, { Button, PlayerForm, PlayerList } from './App';
 import { mount } from 'enzyme';
 
-it('renders without crashing', () => {
+it ('renders without crashing', () => {
     const div = document.createElement('div');
     ReactDOM.render(<App />, div);
 });
 
-test('App has correct defaults when started', () => {
+test ('App has correct defaults when started', () => {
    let app = new App;
 
    const defaultState = {
@@ -37,19 +37,126 @@ test('App has correct defaults when started', () => {
        gameStarted: false,
        playLog: [],
        history: [] };
-   expect(app.defaultGameState()).toEqual(defaultState);
+   expect(app.state).toEqual(defaultState);
 });
 
-test('addPlayer actually adds a player', () => {
+describe ('add player', () => {
     const name = "Topher";
-    //const app = mount(<App />);
-    const app = new App;
-    app.setState = function(object) {
-        Object.assign(this.state, object);
-    };
-    //app.find('form').simulate('submit');
-    app.addPlayer(name);
-    expect(app.state.players[0]).toEqual( { name: name, points: 0, active: true });
+    let app;
+    beforeEach (() => {
+        app = mount(<App/>);
+    });
+    it ('as function', () => {
+        app.node.addPlayer(name);
+        expect(app.node.state.players[0]).toEqual( { name: name, points: 0, active: true });
+    });
+    it ('as event', () => {
+        const input = app.find('#player_name');
+        input.node.value = name;
+        input.simulate('change');
+        app.find('form').simulate('submit');
+        expect(app.node.state.players[0]).toEqual( { name: name, points: 0, active: true });
+    });
+});
+
+describe ('start game', () => {
+    let appWrapper;
+    let app;
+    beforeEach(() => {
+        appWrapper = mount(<App />);
+        app = appWrapper.node;
+        app.state.players = [{ name: "Topher", points: 0, active: true }];
+    });
+    it('as function', () => {
+        app.startGame();
+        expect(app.state.gameStarted).toBeTruthy();
+    });
+    it ('as event', () => {
+        appWrapper.update();
+        appWrapper.find('button.btn-outline-primary').simulate('click');
+        expect(app.state.gameStarted).toBeTruthy();
+    });
 });
 
 
+describe ('player one hits a ball', () => {
+    const appWrapper = mount(<App />);
+    const app = appWrapper.node;
+    app.addPlayer("Player 1");
+    app.addPlayer("Player 2");
+    app.startGame();
+    appWrapper.find('button.btn-block.btn-info').simulate('click');
+    it ("player one should have zero points", () => {
+        expect(app.state.players[0].points).toBe(0);
+    });
+
+    it ("player 2 should be the current player", () => {
+        expect(app.state.currentPlayer).toBe(1);
+    });
+
+    it ("the current ball should be 3", () => {
+        expect(app.state.currentBall).toBe(3);
+    });
+});
+
+describe ('player one ports a ball', () => {
+    const appWrapper = mount(<App />);
+    const app = appWrapper.node;
+    app.addPlayer("Player One");
+    app.addPlayer("Player Two");
+    app.startGame();
+    appWrapper.update();
+    appWrapper.find('button.btn-block.btn-success').simulate('click');
+    appWrapper.find('button.btn-ball').first().simulate('click');
+    it ("player one should have some points", () => {
+        expect(app.state.players[0].points).toBeGreaterThan(0);
+    });
+    it ("player one should be the current player", () => {
+        expect(app.state.currentPlayer).toBe(0);
+    });
+    it ("the current ball should be 4", () => {
+        expect(app.state.currentBall).toBe(4);
+    });
+});
+
+describe ("Player One misses the ball", () => {
+    const appWrapper = mount(<App />);
+    const app = appWrapper.node;
+    app.addPlayer("Player One");
+    app.addPlayer("Player Two");
+    app.startGame();
+    appWrapper.update();
+    appWrapper.find('button.btn-block.btn-danger').first().simulate('click');
+    const originalBall = app.state.currentBall;
+    it ("player one should have < 0  points", () => {
+       expect(app.state.players[0].points).toBeLessThan(0);
+    });
+    it ("player two should be the current player", () => {
+       expect(app.state.currentPlayer).toBe(1);
+    });
+    it ("the current ball should be the same", () => {
+        expect(app.state.currentBall).toBe(originalBall);
+    });
+});
+
+describe ("Player One hits the wrong ball", () => {
+    const appWrapper = mount(<App />);
+    const app = appWrapper.node;
+    app.addPlayer("Player One");
+    app.addPlayer("Player Two");
+    app.startGame();
+    appWrapper.update();
+    appWrapper.find('button.btn-block.btn-danger').last().simulate('click');
+    appWrapper.find('button.btn-ball').last().simulate('click');
+    const originalBall = app.state.currentBall;
+    it ("player one should have < 0 points", () => {
+      expect(app.state.players[0].points).toBeLessThan(0);
+    });
+    it ("player 2 should be the current player", () => {
+        expect(app.state.currentPlayer).toBe(1);
+    });
+
+    it ("the current ball should be 3", () => {
+        expect(app.state.currentBall).toBe(originalBall);
+    });
+});
