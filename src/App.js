@@ -1,14 +1,15 @@
 import React, {Component} from 'react';
+import PropTypes from 'prop-types';
 import './App.css';
 import * as _ from "lodash";
 
 
-const Button = (props) => {
+export const Button = (props) => {
     let classNames = ['btn'];
-    if (props.hasOwnProperty('block') && props.block) {
+    if (props.block) {
         classNames.push('btn-block');
     }
-    if (props.hasOwnProperty('context') && props.context) {
+    if (props.context) {
         let context = props.context;
         if (props.outline) {
             context = 'outline-' + props.context;
@@ -19,17 +20,34 @@ const Button = (props) => {
         classNames.push('btn-' + props.size);
     }
 
-    return <button onClick={props.onClick} className = {classNames.join(' ')}> {props.title} </button>;
+    return <button onClick={props.onClick} className={classNames.join(' ')}> {props.title} </button>;
 };
 
-class PlayerForm extends Component {
+Button.propTypes = {
+    block: PropTypes.bool,
+    outline: PropTypes.bool,
+    context: PropTypes.oneOf(['primary', 'secondary', 'success', 'info', 'warning', 'link', 'danger']),
+    size: PropTypes.oneOf(['lg', 'sm']),
+    title: PropTypes.string.isRequired
+};
+
+export class PlayerForm extends Component {
+    constructor (props) {
+        super(props);
+        this.state = {
+            name: ''
+        };
+    }
+
+    handleChange = (e) => {
+        this.setState({ name: e.target.value });
+    };
+
 
     handleSubmit = (e) => {
         e.preventDefault();
-        let inputField = document.getElementById("player_name");
-        let name = inputField.value;
-        inputField.value = null;
-        this.props.onSubmit(name);
+        this.props.onSubmit(this.state.name);
+        this.setState({ name: '' });
     };
 
     render() {
@@ -41,7 +59,10 @@ class PlayerForm extends Component {
                            name="player_name"
                            placeholder="Enter Name"
                            required
-                           autoFocus={true} />
+                           autoFocus
+                           value={this.state.name}
+                           onChange={this.handleChange}
+                    />
                     <span className="input-group-btn">
                         <button className="btn btn-primary" type="submit">
                             Add Player
@@ -53,7 +74,11 @@ class PlayerForm extends Component {
     }
 }
 
-const BallGrid = (props) => {
+PlayerForm.propTypes = {
+    onSubmit: PropTypes.func.isRequired
+};
+
+export const BallGrid = (props) => {
     let buttons = [];
 
     const className = props.legal ? 'btn-outline-success' : 'btn-outline-warning';
@@ -80,16 +105,23 @@ const BallGrid = (props) => {
     );
 };
 
-const PlayerList = (props) => {
+BallGrid.propTypes = {
+    onClick: PropTypes.func.isRequired,
+    balls: PropTypes.shape().isRequired
+
+};
+
+
+export const PlayerList = (props) => {
     return (
         <div>
             <h3>Score Card</h3>
-            <table className="table">
+            <table className="table table-inverse">
                 <tbody>
                 {props.players.map((player, i) => {
                     let className = !player.active
                         ? 'text-muted eliminated-player'
-                        : (i === props.currentPlayer ? 'table-info current-player' : '');
+                        : (i === props.currentPlayer ? 'bg-info current-player' : '');
 
                     return <tr key={i} className={className}>
                         <td>{player.name}:</td>
@@ -138,7 +170,7 @@ class App extends Component {
         const history = this.state.history.slice();
         let newHistoryEntry = Object.assign(_.cloneDeep(this.state), newState);
         delete newHistoryEntry.history;
-        //stringify to remove references. cloneDeep didn't work here for an unknown reason
+        //stringify to remove references. _.cloneDeep didn't work here for an unknown reason
         history.push(JSON.stringify(newHistoryEntry));
         newState.history = history;
         this.setState(newState);
@@ -213,11 +245,13 @@ class App extends Component {
     };
 
     foulHit = (number) => {
-        const foulBall = this.state.balls[number];
         let players = this.state.players.slice();
         const currentPlayer = players[this.state.currentPlayer];
-        currentPlayer.points -= foulBall.points;
-        players = this.refreshActivePlayers(players, this.state.balls);
+        if (this.ballHasBeenPorted(this.state.balls)) {
+            const foulBall = this.state.balls[number];
+            currentPlayer.points -= foulBall.points;
+            players = this.refreshActivePlayers(players, this.state.balls);
+        }
         this.setGameState({
             players: players,
             currentPlayer: this.getNextPlayer(players),
@@ -247,9 +281,12 @@ class App extends Component {
         let players = this.state.players.slice();
         const balls = Object.assign({}, this.state.balls);
         const currentPlayer = players[this.state.currentPlayer];
-        const missedBall = balls[this.state.currentBall];
-        currentPlayer.points -= missedBall.points;
-        players = this.refreshActivePlayers(players, balls);
+
+        if (this.ballHasBeenPorted(balls)) {
+            const missedBall = balls[this.state.currentBall];
+            currentPlayer.points -= missedBall.points;
+            players = this.refreshActivePlayers(players, balls);
+        }
         this.setGameState({
             players: players,
             balls: balls,
@@ -257,6 +294,17 @@ class App extends Component {
             ballGridActive: false,
             playLog: this.addLogEntry(currentPlayer.name + ' missed ' + this.state.currentBall)
         });
+    };
+
+    ballHasBeenPorted = (balls) => {
+        let ballHasBeenPorted = false;
+        _.forOwn(balls, (ball) => {
+            if (!ball.active) {
+                ballHasBeenPorted = true;
+                return false;
+            }
+        });
+        return ballHasBeenPorted;
     };
 
     winner = () => {
@@ -352,9 +400,9 @@ class App extends Component {
                     </div>
                     <div className="col-6 col-sm-3">
                         <h3>Log</h3>
-                        <ul>
-                            {this.state.playLog.map((playLog) => <li>{ playLog }</li>)}
-                        </ul>
+                        <ol>
+                            {this.state.playLog.map((playLog, i) => <li key={i}>{ playLog }</li>)}
+                        </ol>
                         { this.state.history.length > 1
                             ? <Button onClick = { this.undo } block outline context="warning" title='Undo'/>
                             : null
