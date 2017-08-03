@@ -245,11 +245,13 @@ class App extends Component {
     };
 
     foulHit = (number) => {
-        const foulBall = this.state.balls[number];
         let players = this.state.players.slice();
         const currentPlayer = players[this.state.currentPlayer];
-        currentPlayer.points -= foulBall.points;
-        players = this.refreshActivePlayers(players, this.state.balls);
+        if (this.ballHasBeenPorted(this.state.balls)) {
+            const foulBall = this.state.balls[number];
+            currentPlayer.points -= foulBall.points;
+            players = this.refreshActivePlayers(players, this.state.balls);
+        }
         this.setGameState({
             players: players,
             currentPlayer: this.getNextPlayer(players),
@@ -279,9 +281,12 @@ class App extends Component {
         let players = this.state.players.slice();
         const balls = Object.assign({}, this.state.balls);
         const currentPlayer = players[this.state.currentPlayer];
-        const missedBall = balls[this.state.currentBall];
-        currentPlayer.points -= missedBall.points;
-        players = this.refreshActivePlayers(players, balls);
+
+        if (this.ballHasBeenPorted(balls)) {
+            const missedBall = balls[this.state.currentBall];
+            currentPlayer.points -= missedBall.points;
+            players = this.refreshActivePlayers(players, balls);
+        }
         this.setGameState({
             players: players,
             balls: balls,
@@ -289,6 +294,17 @@ class App extends Component {
             ballGridActive: false,
             playLog: this.addLogEntry(currentPlayer.name + ' missed ' + this.state.currentBall)
         });
+    };
+
+    ballHasBeenPorted = (balls) => {
+        let ballHasBeenPorted = false;
+        _.forOwn(balls, (ball) => {
+            if (!ball.active) {
+                ballHasBeenPorted = true;
+                return false;
+            }
+        });
+        return ballHasBeenPorted;
     };
 
     winner = () => {
@@ -384,9 +400,9 @@ class App extends Component {
                     </div>
                     <div className="col-6 col-sm-3">
                         <h3>Log</h3>
-                        <ul>
+                        <ol>
                             {this.state.playLog.map((playLog, i) => <li key={i}>{ playLog }</li>)}
-                        </ul>
+                        </ol>
                         { this.state.history.length > 1
                             ? <Button onClick = { this.undo } block outline context="warning" title='Undo'/>
                             : null
