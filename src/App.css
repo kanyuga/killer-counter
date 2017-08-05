@@ -3,6 +3,10 @@ body {
   color: #fff;
 }
 
+h3 {
+  font-size: 120%;
+}
+
 #root {
   margin: 10px 0;
 }
@@ -32,4 +36,17 @@ body {
 
 .btn:hover {
   cursor: pointer;
+}
+
+span.current-player {
+  color: #5cb85c;
+}
+
+ol.play-log li.miss,
+ol.play-log li.foulHit {
+  color: #d9534f;
+}
+
+ol.play-log li.port {
+  color: #5cb85c;
 }
