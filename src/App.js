@@ -262,7 +262,7 @@ class App extends Component {
                     <h3>Add Players</h3>
                     <PlayerForm onSubmit={this.addPlayer}/>
 
-                    { this.state.players.length > 0
+                    { this.state.players.length > 1
                         ? <Button onClick={this.startGame} block outline context="primary" title="Start Game"/>
                         : null }
                 </div>
