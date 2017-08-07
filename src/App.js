@@ -87,6 +87,34 @@ class App extends Component {
         this.setState({ players: players });
     };
 
+    deletePlayer = (index) => {
+        let players = this.state.players.slice();
+        const name = players[index].name;
+        players.splice(index, 1);
+        const newState = {
+            players: players
+        };
+
+        if (this.state.gameStarted) {
+            if (window.confirm(`Remove ${name}?`)) {
+                if (this.state.currentPlayer > index) {
+                    newState.currentPlayer = this.state.currentPlayer - 1
+                }
+
+                if (this.state.currentPlayer === index && players.length > 0) {
+                    newState.currentPlayer = this.getNextPlayer(players, this.state.currentPlayer - 1);
+                }
+
+                newState.playLog = this.addLogEntry(`${name} removed`);
+
+                this.setGameState(newState);
+            }
+        }
+        else {
+            this.setState({ players: players });
+        }
+    };
+
     getNextBall = (balls) => {
         let nextBall = this.state.currentBall;
         let counter = 0;
@@ -97,8 +125,8 @@ class App extends Component {
         return nextBall;
     };
 
-    getNextPlayer = (players) => {
-        let nextPlayer = (this.state.currentPlayer + 1) % players.length;
+    getNextPlayer = (players, currentPlayer = this.state.currentPlayer) => {
+        let nextPlayer = (currentPlayer + 1) % players.length;
         while (!players[nextPlayer].active) {
             nextPlayer = (nextPlayer + 1) % players.length;
         }
@@ -149,12 +177,12 @@ class App extends Component {
                 portedBall.active = false;
                 players = this.refreshActivePlayers(players, balls);
 
-                delete state.currentPlayer; // unchanged
                 Object.assign(state, {
                     players,
                     balls,
                     currentBall: this.getNextBall(balls),
                     ballGridActive: false,
+                    currentPlayer: this.state.currentPlayer
                 });
                 break;
             
@@ -276,7 +304,11 @@ class App extends Component {
                     { display }
                     </div>
                     <div className="col-6 col-sm-3">
-                        <PlayerList players={this.state.players} currentPlayer={this.state.currentPlayer}/>
+                        <PlayerList
+                            players={this.state.players}
+                            onDelete={this.deletePlayer}
+                            currentPlayer={this.state.currentPlayer}
+                        />
                         {this.state.gameStarted
                             ? <Button onClick = {this.resetGame} block outline context="primary" title="New Game"/>
                             : null }

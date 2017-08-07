@@ -9,7 +9,8 @@
     "prop-types": "^15.5.10",
     "react": "^15.6.1",
     "react-dom": "^15.6.1",
-    "react-scripts": "1.0.10"
+    "react-scripts": "1.0.10",
+    "sinon": "^3.0.0"
   },
   "scripts": {
     "predeploy": "CI=true react-scripts test --env=jsdom && npm run build",

@@ -2,6 +2,7 @@ import React from 'react';
 import ReactDOM from 'react-dom';
 import App from './App';
 import { mount } from 'enzyme';
+import * as sinon from "sinon";
 
 it ('renders without crashing', () => {
     const div = document.createElement('div');
@@ -69,6 +70,48 @@ describe ('add player', () => {
         input.simulate('change');
         appWrapper.find('form').simulate('submit');
         expect(app.state.players[0]).toEqual( { name: name, points: 0, active: true });
+    });
+});
+
+describe('delete player', () => {
+    let appWrapper;
+    let app;
+    beforeEach(() => {
+        appWrapper = mount(<App />);
+        app = appWrapper.node;
+        app.state.players = [
+            { name: "Player 1", points: 0, active: true },
+            { name: "Player 2", points: 0, active: true },
+            { name: "Player 3", points: 0, active: true },
+            { name: "Player 4", points: 0, active: true }
+        ];
+    });
+
+    it ('as a function', () => {
+       app.deletePlayer(2);
+       expect(app.state.players[2].name).toEqual("Player 4");
+    });
+
+    it ('when current player is deleted', () => {
+        app.state.currentPlayer = 2;
+        app.deletePlayer(2);
+        expect(app.state.currentPlayer).toEqual(2);
+    });
+
+    it ('when currentPlayer > deleted player index', () => {
+        app.state.currentPlayer = 2;
+        app.startGame();
+        const confirmStub = sinon.stub(window, 'confirm');
+        confirmStub.returns(true);
+        app.deletePlayer(1);
+        expect(app.state.currentPlayer).toEqual(1);
+        confirmStub.restore();
+    });
+
+    it ('as event', () => {
+        appWrapper.update();
+        appWrapper.find('.btn.btn-danger').at(2).simulate('click');
+        expect(app.state.players[2].name).toEqual("Player 4");
     });
 });
 
