@@ -54,19 +54,21 @@ test('ballHasBeenPorted', () => {
 describe ('add player', () => {
     const name = "Topher";
     let app;
+    let appWrapper;
     beforeEach (() => {
-        app = mount(<App/>);
+        appWrapper = mount(<App/>);
+        app = appWrapper.node;
     });
     it ('as function', () => {
-        app.node.addPlayer(name);
-        expect(app.node.state.players[0]).toEqual( { name: name, points: 0, active: true });
+        app.addPlayer(name);
+        expect(app.state.players[0]).toEqual( { name: name, points: 0, active: true });
     });
     it ('as event', () => {
-        const input = app.find('#player_name');
+        const input = appWrapper.find('#player_name');
         input.node.value = name;
         input.simulate('change');
-        app.find('form').simulate('submit');
-        expect(app.node.state.players[0]).toEqual( { name: name, points: 0, active: true });
+        appWrapper.find('form').simulate('submit');
+        expect(app.state.players[0]).toEqual( { name: name, points: 0, active: true });
     });
 });
 
@@ -82,15 +84,23 @@ describe ('start game', () => {
         app.startGame();
         expect(app.state.gameStarted).toBeTruthy();
     });
+
+    it ('button should not be visible unless at least two players are added', () => {
+        appWrapper.update();
+        expect(appWrapper.find('button.btn-outline-primary').exists()).toBeFalsy();
+    });
+
     it ('as event', () => {
+        app.state.players.push({ name: "Player 2", points: 0, active: true });
         appWrapper.update();
         appWrapper.find('button.btn-outline-primary').simulate('click');
         expect(app.state.gameStarted).toBeTruthy();
     });
-
     it ('ballHasBeenPorted should be false', () => {
+        app.startGame();
         expect(app.ballHasBeenPorted(app.state.balls)).toBeFalsy();
     });
+
 });
 
 
@@ -212,8 +222,6 @@ describe ('Player One hits the wrong ball when one has been ported', () => {
     app.state.currentPlayer = 0;
     app.state.balls[6].active = false;
     appWrapper.update();
-
-    const originalBall = app.state.currentBall;
 
     appWrapper.find('button.btn-block.btn-danger').last().simulate('click');
     appWrapper.find('button.btn-ball').at(1).simulate('click');
