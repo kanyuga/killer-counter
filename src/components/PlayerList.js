@@ -1,4 +1,5 @@
 import React from 'react';
+import Button from './Button';
 
 export default function PlayerList(props) {
     return (
@@ -13,7 +14,10 @@ export default function PlayerList(props) {
 
                     return <tr key={i} className={className}>
                         <td>{player.name}:</td>
-                        <td className="text-right">{player.points}</td>
+                        <td className="text-right">
+                            {player.points} &nbsp;
+                            <Button onClick={() => props.onDelete(i)} title="x" context="danger" size="sm"/>
+                        </td>
                     </tr>
                 })}
                 </tbody>

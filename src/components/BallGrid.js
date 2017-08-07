@@ -6,7 +6,7 @@ import PropTypes from 'prop-types';
 export default function BallGrid(props) {
     let buttons = [];
 
-    const className = props.legal ? 'btn-outline-success' : 'btn-outline-warning';
+    const className = props.legal ? 'btn-success' : 'btn-danger';
 
     _.forOwn(props.balls, (ball, number) =>
         buttons.push(<div key={number} className="col-4 text-center">
