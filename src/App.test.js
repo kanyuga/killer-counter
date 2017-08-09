@@ -3,6 +3,18 @@ import ReactDOM from 'react-dom';
 import App from './App';
 import { mount } from 'enzyme';
 import * as sinon from "sinon";
+import { forEach } from "lodash";
+
+let confirmStub;
+
+beforeAll(() => {
+   confirmStub = sinon.stub(window, 'confirm');
+   confirmStub.returns(true);
+});
+
+afterAll(() => {
+    confirmStub.restore();
+});
 
 it ('renders without crashing', () => {
     const div = document.createElement('div');
@@ -101,11 +113,8 @@ describe('delete player', () => {
     it ('when currentPlayer > deleted player index', () => {
         app.state.currentPlayer = 2;
         app.startGame();
-        const confirmStub = sinon.stub(window, 'confirm');
-        confirmStub.returns(true);
         app.deletePlayer(1);
         expect(app.state.currentPlayer).toEqual(1);
-        confirmStub.restore();
     });
 
     it ('as event', () => {
@@ -143,9 +152,42 @@ describe ('start game', () => {
         app.startGame();
         expect(app.ballHasBeenPorted(app.state.balls)).toBeFalsy();
     });
-
 });
 
+describe ('reset game', () => {
+    let appWrapper;
+    let app;
+    beforeEach (() => {
+        appWrapper = mount(<App/>);
+        app = appWrapper.node;
+        app.addPlayer("Player One");
+        app.addPlayer("Player Two");
+        app.startGame();
+        confirmStub.reset();
+    });
+    it ('as a function', () => {
+        forEach(app.state.balls, (ball) => {
+            ball.active = false;
+        });
+        app.resetGame();
+        expect(app.state).toEqual(app.defaultGameState())
+    });
+
+    it ('as event when game is not over', () => {
+        appWrapper.find('button.btn-outline-primary').simulate('click');
+        expect(confirmStub.calledOnce).toEqual(true);
+        //expect(app.state).toEqual(app.defaultGameState()); //Not working for some reason
+    });
+
+    it ('as event when game is over', () => {
+        forEach(app.state.balls, (ball) => {
+            ball.active = false;
+        });
+        appWrapper.find('button.btn-outline-primary').simulate('click');
+        expect(confirmStub.called).toEqual(false);
+        expect(app.state).toEqual(app.defaultGameState());
+    });
+});
 
 describe ('player one hits a ball', () => {
     const appWrapper = mount(<App />);

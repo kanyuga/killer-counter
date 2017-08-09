@@ -250,7 +250,9 @@ class App extends Component {
     };
 
     resetGame = () => {
-        this.setState(this.defaultGameState());
+        if (this.gameOver() || window.confirm('Start New Game? This cannot be undone')) {
+            this.setState(this.defaultGameState());
+        }
     };
 
     render() {
