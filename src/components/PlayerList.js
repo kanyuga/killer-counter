@@ -17,7 +17,7 @@ export default function PlayerList(props) {
                         <td className="text-right">
                             {player.points} &nbsp;
                             {!isLeaderboard
-                                ? <Button onClick={() => props.onDelete(i)} title="x" context="danger" size="sm"/>
+                                ? <Button onClick={() => props.onDelete(i)} title="&times;" context="danger" size="sm"/>
                                 : null
                             }
                         </td>

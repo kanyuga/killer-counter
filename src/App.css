@@ -62,3 +62,15 @@ ol.play-log li.port {
 .table td {
    border-color: transparent;
 }
+
+.close {
+  color: #ccc;
+}
+
+.close:hover {
+  color: #fff;
+}
+
+.modal-content {
+  background: #000;
+}
