@@ -6,8 +6,10 @@ import BallGrid from './components/BallGrid';
 import Button from './components/Button';
 import PlayerForm from './components/PlayerForm';
 import PlayerList from './components/PlayerList';
+import PlayerModal from './components/PlayerModal';
 
 import './App.css';
+
 class App extends Component {
 
     ballCount = 15;
@@ -257,6 +259,7 @@ class App extends Component {
 
     render() {
         let display;
+        const playerForm = <PlayerForm onSubmit={this.addPlayer}/>;
         if (this.state.gameStarted) {
             if (this.gameOver()) {
                 display = (
@@ -290,8 +293,7 @@ class App extends Component {
             display = (
                 <div className="action-section">
                     <h3>Add Players</h3>
-                    <PlayerForm onSubmit={this.addPlayer}/>
-
+                    { playerForm }
                     { this.state.players.length > 1
                         ? <Button onClick={this.startGame} block outline context="primary" title="Start Game"/>
                         : null }
@@ -326,7 +328,16 @@ class App extends Component {
                                     currentPlayer={this.state.currentPlayer}
                                 />
                                 {this.state.gameStarted
-                                    ? <Button onClick = {this.resetGame} block outline context="primary" title="New Game"/>
+                                    ? <div>
+                                        <Button onClick = {this.resetGame} outline context="primary" title="New Game"/>
+                                        &nbsp;
+                                        <button type="button" className="btn btn-outline-info" data-toggle="modal" data-target="#playerModal">
+                                            Add Players
+                                        </button>
+                                        <PlayerModal>
+                                            { playerForm }
+                                        </PlayerModal>
+                                    </div>
                                     : null }
                             </div>
                             <div className="tab-pane" id="leaderboard" role="tabpanel">
