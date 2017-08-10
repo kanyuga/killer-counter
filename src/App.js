@@ -305,25 +305,49 @@ class App extends Component {
                     <div className="col-sm-6">
                     { display }
                     </div>
-                    <div className="col-6 col-sm-3">
-                        <PlayerList
-                            players={this.state.players}
-                            onDelete={this.deletePlayer}
-                            currentPlayer={this.state.currentPlayer}
-                        />
-                        {this.state.gameStarted
-                            ? <Button onClick = {this.resetGame} block outline context="primary" title="New Game"/>
-                            : null }
-                    </div>
-                    <div className="col-6 col-sm-3">
-                        <h3>Log</h3>
-                        <ol className="play-log">
-                            {this.state.playLog.map((playLog, i) => <li className={playLog.type} key={i}>{ playLog.log }</li>)}
-                        </ol>
-                        { this.state.history.length > 1
-                            ? <Button onClick = { this.undo } block outline context="warning" title='Undo'/>
-                            : null
-                        }
+                    <div className="col-sm-6">
+                        <ul className="nav nav-tabs" role="tablist">
+                            <li className="nav-item">
+                                <a className="nav-link active" data-toggle="tab" href="#player-list" role="tab">Players</a>
+                            </li>
+                            <li className="nav-item">
+                                <a className="nav-link" data-toggle="tab" href="#leaderboard" role="tab">Leaderboard</a>
+                            </li>
+                            <li className="nav-item">
+                                <a className="nav-link" data-toggle="tab" href="#play-log" role="tab">Log</a>
+                            </li>
+                        </ul>
+
+                        <div className="tab-content">
+                            <div className="tab-pane active" id="player-list" role="tabpanel">
+                                <PlayerList
+                                    players={this.state.players}
+                                    onDelete={this.deletePlayer}
+                                    currentPlayer={this.state.currentPlayer}
+                                />
+                                {this.state.gameStarted
+                                    ? <Button onClick = {this.resetGame} block outline context="primary" title="New Game"/>
+                                    : null }
+                            </div>
+                            <div className="tab-pane" id="leaderboard" role="tabpanel">
+                                <PlayerList
+                                    players={this.state.players.slice().sort((a, b) => {
+                                        return a.points < b.points ? 1 : a.points > b.points ? -1 : 0;
+                                    })}
+                                    currentPlayer={this.state.currentPlayer}
+                                />
+                            </div>
+                            <div className="tab-pane" id="play-log" role="tabpanel">
+                                <ol className="play-log">
+                                    {this.state.playLog.map((playLog, i) => <li className={playLog.type} key={i}>{ playLog.log }</li>)}
+                                </ol>
+                                { this.state.history.length > 1
+                                    ? <Button onClick = { this.undo } block outline context="warning" title='Undo'/>
+                                    : null
+                                }
+                            </div>
+                        </div>
+
                     </div>
                 </div>
             </div>

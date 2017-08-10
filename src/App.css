@@ -50,3 +50,15 @@ ol.play-log li.foulHit {
 ol.play-log li.port {
   color: #5cb85c;
 }
+
+.tab-content > div {
+  margin-top: 10px;
+}
+
+.nav-tabs .nav-link {
+  color: #5bc0de;
+}
+
+.table td {
+   border-color: transparent;
+}
