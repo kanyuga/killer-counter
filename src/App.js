@@ -145,15 +145,22 @@ class App extends Component {
             foulHit: 'foul hit',
             port: 'ported',
             miss: 'missed',
+            portCurrentBallAndWhiteBall: `ported ${this.state.currentBall} and then ported the white ball`
         };
         let players = this.state.players.slice();
         let currentPlayer = this.state.players[this.state.currentPlayer];
         const balls = Object.assign({}, this.state.balls);
 
+        let logEntry = `${currentPlayer.name} ${typeLog[type]} ${number || this.state.currentBall}`;
+
+        if (type === 'portCurrentBallAndWhiteBall') {
+            logEntry = `${currentPlayer.name} ${typeLog[type]}`;
+        }
+
         const state = {
             currentPlayer: this.getNextPlayer(this.state.players),
             ballGridActive: false,
-            playLog: this.addLogEntry(`${currentPlayer.name} ${typeLog[type]} ${number || this.state.currentBall}`, type),
+            playLog: this.addLogEntry(logEntry, type),
         };
         
         switch(type) {
@@ -204,6 +211,14 @@ class App extends Component {
                 });
                 break;
 
+            case 'portCurrentBallAndWhiteBall':
+                const currentBall = balls[this.state.currentBall];
+                currentBall.active = false;
+                Object.assign(state, {
+                    currentPlayer: this.getNextPlayer(players),
+                    currentBall: this.getNextBall(balls)
+                });
+                break;
             default:
                 break;
         }
@@ -285,6 +300,7 @@ class App extends Component {
                             <BallGrid balls={this.state.balls} legal={false} onClick={(number) => this.play('foulHit', number)}/> :
                             null
                         }
+                        <Button onClick={() => this.play('portCurrentBallAndWhiteBall')} size="lg" block context="danger" title={`Port #${this.state.currentBall} and white ball`} />
                     </div>
                 );
             }

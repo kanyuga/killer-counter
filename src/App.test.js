@@ -281,7 +281,7 @@ describe ("Player One hits the wrong ball on the first move", () => {
     app.addPlayer("Player Two");
     app.startGame();
     appWrapper.update();
-    appWrapper.find('button.btn-block.btn-danger').last().simulate('click');
+    appWrapper.find('button.btn-block.btn-danger').at(1).simulate('click');
     appWrapper.find('button.btn-ball').at(1).simulate('click');
     const originalBall = app.state.currentBall;
 
@@ -308,10 +308,38 @@ describe ('Player One hits the wrong ball when one has been ported', () => {
     app.state.balls[6].active = false;
     appWrapper.update();
 
-    appWrapper.find('button.btn-block.btn-danger').last().simulate('click');
+    appWrapper.find('button.btn-block.btn-danger').at(1).simulate('click');
     appWrapper.find('button.btn-ball').at(1).simulate('click');
 
     it ("player one should have < 0 points since one has been ported already", () => {
         expect(app.state.players[0].points).toEqual(-4);
+    });
+});
+
+describe('Player ports the current ball and then ports the white ball', () => {
+    let appWrapper;
+    let app;
+    beforeEach (() =>{
+        appWrapper = mount(<App />);
+        app = appWrapper.node;
+        app.addPlayer("Player One");
+        app.addPlayer("Player Two");
+        app.startGame();
+    });
+    it ('as function', () => {
+        app.play('portCurrentBallAndWhiteBall');
+        const state = app.state;
+        expect(state.currentPlayer).toEqual(1);
+        expect(state.balls[3].active).toEqual(false);
+        expect(state.players[0].points).toEqual(0);
+        expect(state.currentBall).toEqual(4);
+    });
+    it ('as event', () => {
+        appWrapper.find('button.btn-danger').at(2).simulate('click');
+        const state = app.state;
+        expect(state.currentPlayer).toEqual(1);
+        expect(state.balls[3].active).toEqual(false);
+        expect(state.players[0].points).toEqual(0);
+        expect(state.currentBall).toEqual(4);
     });
 });
