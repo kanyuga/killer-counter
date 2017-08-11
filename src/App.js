@@ -98,18 +98,23 @@ class App extends Component {
         };
 
         if (this.state.gameStarted) {
-            if (window.confirm(`Remove ${name}?`)) {
-                if (this.state.currentPlayer > index) {
-                    newState.currentPlayer = this.state.currentPlayer - 1
+            if (this.state.players.length > 1) {
+                if (window.confirm(`Remove ${name}?`)) {
+                    if (this.state.currentPlayer > index) {
+                        newState.currentPlayer = this.state.currentPlayer - 1
+                    }
+
+                    if (this.state.currentPlayer === index && players.length > 0) {
+                        newState.currentPlayer = this.getNextPlayer(players, this.state.currentPlayer - 1);
+                    }
+
+                    newState.playLog = this.addLogEntry(`${name} removed`);
+
+                    this.setGameState(newState);
                 }
-
-                if (this.state.currentPlayer === index && players.length > 0) {
-                    newState.currentPlayer = this.getNextPlayer(players, this.state.currentPlayer - 1);
-                }
-
-                newState.playLog = this.addLogEntry(`${name} removed`);
-
-                this.setGameState(newState);
+            }
+            else {
+                window.alert('The last player cannot be removed. Use the start game button.');
             }
         }
         else {

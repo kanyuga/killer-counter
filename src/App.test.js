@@ -117,6 +117,16 @@ describe('delete player', () => {
         expect(app.state.currentPlayer).toEqual(1);
     });
 
+    it ('when only one player is left ', () => {
+        app.state.players = app.state.players.slice(0, 1);
+        app.startGame();
+        const alertStub = sinon.stub(window, 'alert');
+        alertStub.returns(null);
+        app.deletePlayer(0);
+        expect(app.state.players.length).toEqual(1);
+        alertStub.restore();
+    });
+
     it ('as event', () => {
         appWrapper.update();
         appWrapper.find('.btn.btn-danger').at(2).simulate('click');
