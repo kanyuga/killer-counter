@@ -1,0 +1,32 @@
+version: 2
+jobs:
+  build:
+    environment:
+      CODECLIMATE_REPO_TOKEN: 1d92386039c561396d412a18d8d171f5b3441cada3c23e513e414836eab92701
+    docker:
+      - image: circleci/node:7.10
+
+    working_directory: ~/repo
+
+    steps:
+      - checkout
+      # Download and cache dependencies
+      - restore_cache:
+          keys:
+          - v1-dependencies-{{ checksum "package.json" }}
+          # fallback to using the latest cache if no exact match is found
+          - v1-dependencies-
+
+      - run: yarn install
+
+      - save_cache:
+          paths:
+            - node_modules
+          key: v1-dependencies-{{ checksum "package.json" }}
+        
+      # run tests!
+      - run: sudo npm install -g codeclimate-test-reporter
+      - run: yarn test -- --coverage
+      - run: codeclimate-test-reporter < coverage/lcov.info
+
+
