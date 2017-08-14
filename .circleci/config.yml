@@ -2,7 +2,7 @@ version: 2
 jobs:
   build:
     environment:
-      CODECLIMATE_REPO_TOKEN: 1d92386039c561396d412a18d8d171f5b3441cada3c23e513e414836eab92701
+      CODECLIMATE_REPO_TOKEN: 76126b978c074e68c125543b3ef7d2079faa9fc60da322a8e8da9ec99d8d8bea
     docker:
       - image: circleci/node:7.10
 

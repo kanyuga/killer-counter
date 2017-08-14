@@ -1,6 +1,6 @@
 # Killer Counter
 
-[![CircleCI](https://circleci.com/gh/ProfNandaa/killer-counter/tree/master.svg?style=shield)](https://circleci.com/gh/ProfNandaa/killer-counter/tree/master) [![Test Coverage](https://codeclimate.com/github/ProfNandaa/killer-counter/badges/coverage.svg)](https://codeclimate.com/github/ProfNandaa/killer-counter/coverage) [![Code Climate](https://codeclimate.com/github/ProfNandaa/killer-counter/badges/gpa.svg)](https://codeclimate.com/github/ProfNandaa/killer-counter) [![Issue Count](https://codeclimate.com/github/ProfNandaa/killer-counter/badges/issue_count.svg)](https://codeclimate.com/github/ProfNandaa/killer-counter)
+[![CircleCI](https://circleci.com/gh/kanyuga/killer-counter/tree/master.svg?style=shield)](https://circleci.com/gh/kanyuga/killer-counter/tree/master) [![Test Coverage](https://codeclimate.com/github/kanyuga/killer-counter/badges/coverage.svg)](https://codeclimate.com/github/kanyuga/killer-counter/coverage) [![Code Climate](https://codeclimate.com/github/kanyuga/killer-counter/badges/gpa.svg)](https://codeclimate.com/github/kanyuga/killer-counter) [![Issue Count](https://codeclimate.com/github/kanyuga/killer-counter/badges/issue_count.svg)](https://codeclimate.com/github/kanyuga/killer-counter)
 
 This is an attempt to create a log for killer.
 
