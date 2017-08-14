@@ -19,7 +19,27 @@ class App extends Component {
         this.state = this.defaultGameState();
     }
 
+    componentWillUpdate(nextProps, nextState) {
+        // hook into this lifecycle event to save state in 
+        // localstorage
+        if (window.localStorage) {
+            window.localStorage.setItem('state', JSON.stringify(nextState));
+        }
+    }
+
     defaultGameState = () =>  {
+        // check if we'd initial state stored
+        if (window.localStorage) {
+            let state = window.localStorage.getItem('state');
+            if (state) {
+                try {
+                    return JSON.parse(state);
+                } catch (e) {
+                    console.error('Invalid `state` string');
+                }
+            }
+        }
+
         const balls = {};
 
         for (let i = 1; i <= this.ballCount; i++) {
@@ -273,6 +293,8 @@ class App extends Component {
 
     resetGame = () => {
         if (this.gameOver() || window.confirm('Start New Game? This cannot be undone')) {
+            // reset localStorage
+            if (window.localStorage) window.localStorage.clear();
             this.setState(this.defaultGameState());
         }
     };
