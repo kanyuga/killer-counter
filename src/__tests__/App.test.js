@@ -1,6 +1,6 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
-import App from './App';
+import App from '../App';
 import { mount } from 'enzyme';
 import * as sinon from "sinon";
 import { forEach } from "lodash";
