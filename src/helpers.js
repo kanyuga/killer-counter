@@ -1,15 +1,4 @@
 export function defaultGameState(ballCount = 15) {
-  // check if we'd initial state stored
-  // if (window.localStorage) {
-  //   let state = window.localStorage.getItem('state');
-  //   if (state) {
-  //     try {
-  //       return JSON.parse(state);
-  //     } catch (e) {
-  //       console.error('Invalid `state` string');
-  //     }
-  //   }
-  // }
 
   const balls = {};
 
@@ -32,11 +21,15 @@ export function defaultGameState(ballCount = 15) {
 }
 
 export function refreshActivePlayers(players = [], pointsLeft) {
-  const maxScore = players.reduce((maxScore, player) => Math.max(maxScore, player.score), 0);
+  const maxScore = getMaxScore(players);
   return players.map(player => {
     player.active = player.score + pointsLeft >= maxScore;
     return player;
   });
+}
+
+export function getMaxScore(players) {
+  return players.reduce((maxScore, player) => Math.max(maxScore, player.score), 0);
 }
 
 export function pointsLeft(balls) {

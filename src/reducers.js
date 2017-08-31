@@ -20,7 +20,7 @@ export function resetGame(state = initialState, action) {
 }
 
 export function play(state = initialState, action) {
-  const newState = Object.assign({}, state);
+  const newState = {...state};
   const currentPlayer = Helpers.getCurrentPlayer(newState.players);
   const currentBall = Helpers.getCurrentBall(newState.balls);
   let portedBall;
@@ -33,25 +33,34 @@ export function play(state = initialState, action) {
       portedBall.active = false;
       newState.players[currentPlayer].score += portedBall.points;
       newState.balls = Helpers.switchNextBall(newState.balls, currentBall);
+      newState.players = Helpers.refreshActivePlayers(newState.players, Helpers.pointsLeft(newState.balls))
       break;
     case Actions.PLAY_MISS:
       let missedBall = newState.balls[currentBall];
       newState.players[currentPlayer].score -= Helpers.ballPorted(newState.balls) ? missedBall.points : 0;
-      newState.players = Helpers.switchNextPlayer(newState.players, currentPlayer);
+      newState.players = Helpers.switchNextPlayer(
+        Helpers.refreshActivePlayers(newState.players, Helpers.pointsLeft(newState.balls)),
+        currentPlayer
+      );
       break;
     case Actions.PLAY_FOUL_PORT:
       let foulBall = newState.balls[action.number];
       newState.players[currentPlayer].score -= Helpers.ballPorted(newState.balls) ? foulBall.points : 0;
-      newState.players = Helpers.switchNextPlayer(newState.players, currentPlayer);
+      newState.players = Helpers.switchNextPlayer(
+        Helpers.refreshActivePlayers(newState.players, Helpers.pointsLeft(newState.balls)),
+        currentPlayer
+      );
       break;
     case Actions.PLAY_PORT_CURRENT_AND_WHITE_BALL:
       portedBall = newState.balls[currentBall];
       portedBall.active = false;
-      newState.players = Helpers.switchNextPlayer(newState.players, currentPlayer);
       newState.balls = Helpers.switchNextBall(newState.balls, currentBall);
+      newState.players = Helpers.switchNextPlayer(
+        Helpers.refreshActivePlayers(newState.players, Helpers.pointsLeft(newState.balls)),
+        currentPlayer
+      );
       break;
   }
-  newState.players = Helpers.refreshActivePlayers(newState.players, Helpers.pointsLeft(newState.balls));
   return newState;
 }
 
@@ -79,13 +88,13 @@ export function players(players = [], action) {
 
 export function gameApp(state, action) {
   if (action.type.endsWith('PLAYER')) {
-    state = Object.assign({}, state, { players: players(state.players, action)} );
+    state = {...state, players: players(state.players, action) };
   } else if (action.type.startsWith('PLAY_')) {
-    state = Object.assign({}, state, play(state, action));
+    state = {...state, ...play(state, action) };
   } else if (action.type === Actions.START_GAME) {
-    state = Object.assign({}, state, {started: started(state.started, action)});
+    state = {...state, started: started(state.started, action) };
   } else if (action.type === Actions.NEW_GAME) {
-    state = Object.assign({}, state, resetGame(state, action));
+    state = resetGame(state, action);
   }
   return state;
 }
