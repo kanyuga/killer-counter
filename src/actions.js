@@ -26,22 +26,22 @@ export function newGame() {
   return { type: NEW_GAME};
 }
 
-export function port(currentPlayer, number) {
-  return { type: PLAY_PORT, currentPlayer, number };
+export function port(number) {
+  return { type: PLAY_PORT, number };
 }
 
-export function miss(currentPlayer, number) {
-  return { type: PLAY_MISS, currentPlayer, number };
+export function miss() {
+  return { type: PLAY_MISS };
 }
 
-export function hit(currentPlayer, number) {
-  return { type: PLAY_HIT, currentPlayer, number };
+export function hit() {
+  return { type: PLAY_HIT };
 }
 
-export function foulPort(currentPlayer, number) {
-  return { type: PLAY_FOUL_PORT, currentPlayer, number };
+export function foulPort(number) {
+  return { type: PLAY_FOUL_PORT, number };
 }
 
-export function portCurrentAndWhiteBall(currentPlayer, number) {
-  return { type: PLAY_PORT_CURRENT_AND_WHITE_BALL, currentPlayer, number };
+export function portCurrentAndWhiteBall() {
+  return { type: PLAY_PORT_CURRENT_AND_WHITE_BALL };
 }

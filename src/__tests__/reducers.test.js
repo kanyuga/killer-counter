@@ -44,13 +44,13 @@ describe('unit tests', () => {
       state.started = true;
     });
     it ('hit', () => {
-      const result = play(state, Actions.hit(1, 3));
+      const result = play(state, Actions.hit());
       expect(result.players[2].current).toBe(true);
       expect(result.balls[3].current).toBe(true);
     });
 
     it ('port', () => {
-      const result = play(state, Actions.port(1, 3));
+      const result = play(state, Actions.port(3));
       expect(result.players[1].current).toBe(true);
       expect(result.balls[3].active).toBe(false);
       expect(result.players[1].score).toBe(6);
@@ -58,7 +58,7 @@ describe('unit tests', () => {
     });
 
     it ('miss when none has been ported', () => {
-      const result = play(state, Actions.miss(1, 3));
+      const result = play(state, Actions.miss());
       expect(result.players[2].current).toBe(true);
       expect(result.balls[3].current).toBe(true);
       expect(result.players[1].score).toBe(0);
@@ -66,14 +66,14 @@ describe('unit tests', () => {
 
     it ('miss', () => {
       state.balls[5].active = false;
-      const result = play(state, Actions.miss(1, 3));
+      const result = play(state, Actions.miss());
       expect(result.players[2].current).toBe(true);
       expect(result.balls[3].current).toBe(true);
       expect(result.players[1].score).toBe(-6);
     });
 
     it ('foul port when none has been ported', () => {
-      const result = play(state, Actions.foulPort(1, 5));
+      const result = play(state, Actions.foulPort(5));
       expect(result.players[2].current).toBe(true);
       expect(result.balls[3].current).toBe(true);
       expect(result.players[1].score).toBe(0);
@@ -82,7 +82,7 @@ describe('unit tests', () => {
 
     it ('foul port', () => {
       state.balls[7].active = false;
-      const result = play(state, Actions.foulPort(1, 5));
+      const result = play(state, Actions.foulPort(5));
       expect(result.players[2].current).toBe(true);
       expect(result.balls[3].current).toBe(true);
       expect(result.players[1].score).toBe(-5);
@@ -90,7 +90,7 @@ describe('unit tests', () => {
     });
 
     it ('port current ball and white ball', () => {
-      const result = play(state, Actions.portCurrentAndWhiteBall(1, 3));
+      const result = play(state, Actions.portCurrentAndWhiteBall());
       expect(result.players[2].current).toBe(true);
       expect(result.balls[3].active).toBe(false);
       expect(result.players[1].score).toBe(0);
@@ -141,13 +141,13 @@ describe('store tests', () => {
     });
 
     it('hit', () => {
-      store.dispatch(Actions.hit(0, 3));
+      store.dispatch(Actions.hit());
       expect(store.getState().balls[3].current).toBe(true);
       expect(store.getState().players[1].current).toBe(true);
     });
 
     it('port', () => {
-      store.dispatch(Actions.port(0, 3));
+      store.dispatch(Actions.port(3));
       expect(store.getState().players[0].current).toBe(true);
       expect(store.getState().players[0].score).toBe(6);
       expect(store.getState().balls[3].active).toBe(false);
@@ -155,23 +155,23 @@ describe('store tests', () => {
     });
 
     it('miss before ball is ported', () => {
-      store.dispatch(Actions.miss(0, 3));
+      store.dispatch(Actions.miss());
       expect(store.getState().balls[3].current).toBe(true);
       expect(store.getState().players[0].score).toBe(0);
       expect(store.getState().players[1].current).toBe(true);
     });
 
     it('miss', () => {
-      store.dispatch(Actions.port(0, 7));
-      store.dispatch(Actions.hit(0, 3));
-      store.dispatch(Actions.miss(0, 3));
+      store.dispatch(Actions.port(7));
+      store.dispatch(Actions.hit());
+      store.dispatch(Actions.miss());
       expect(store.getState().balls[3].current).toBe(true);
       expect(store.getState().players[1].score).toBe(-6);
       expect(store.getState().players[0].current).toBe(true);
     });
 
     it('foul port before ball is ported', () => {
-      store.dispatch(Actions.foulPort(0, 6));
+      store.dispatch(Actions.foulPort(6));
       expect(store.getState().balls[3].current).toBe(true);
       expect(store.getState().balls[6].active).toBe(true);
       expect(store.getState().players[0].score).toBe(0);
@@ -179,9 +179,9 @@ describe('store tests', () => {
     });
 
     it('foul port', () => {
-      store.dispatch(Actions.port(0, 7));
-      store.dispatch(Actions.hit(0, 3));
-      store.dispatch(Actions.foulPort(1, 6));
+      store.dispatch(Actions.port(7));
+      store.dispatch(Actions.hit());
+      store.dispatch(Actions.foulPort(6));
       expect(store.getState().balls[3].current).toBe(true);
       expect(store.getState().balls[6].active).toBe(true);
       expect(store.getState().players[1].score).toBe(-6);
@@ -189,7 +189,7 @@ describe('store tests', () => {
     });
 
     it('port current ball and white ball', () => {
-      store.dispatch(Actions.portCurrentAndWhiteBall(0, 3));
+      store.dispatch(Actions.portCurrentAndWhiteBall());
       expect(store.getState().balls[3].active).toBe(false);
       expect(store.getState().balls[4].current).toBe(true);
       expect(store.getState().players[0].score).toBe(0);
