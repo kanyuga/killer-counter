@@ -3,17 +3,20 @@ import {gameApp, play, players, resetGame, started, undo} from '../reducers';
 import { defaultGameState } from "../helpers"
 import * as Actions from "../actions";
 
+function resetState() {
+  const state = defaultGameState();
+  state.players = [
+    { name: 'Player 1', score: 0, active: true, current: false },
+    { name: 'Player 2', score: 0, active: true, current: true },
+    { name: 'Player 3', score: 0, active: true, current: false },
+  ];
+  return state;
+}
+
 describe('unit tests', () => {
   let state;
 
-  beforeEach(() => {
-    state = defaultGameState();
-    state.players = [
-      { name: 'Player 1', score: 0, active: true, current: false },
-      { name: 'Player 2', score: 0, active: true, current: true },
-      { name: 'Player 3', score: 0, active: true, current: false },
-    ];
-  });
+  beforeEach(() => { state = resetState(); });
 
   it ('start game', () => {
     expect(started(state.started, Actions.startGame())).toEqual(true);
@@ -105,10 +108,12 @@ describe('unit tests', () => {
     });
 
     it ('undo', () => {
+      let initialState = JSON.parse(JSON.stringify(state));
       let newState = play(state, Actions.portCurrentAndWhiteBall());
-      expect(undo(newState, Actions.undo())).toEqual(state);
-      let newerState = play(newState, Actions.portCurrentAndWhiteBall());
-      expect(undo(newerState, Actions.undo())).toEqual(newState);
+      expect(undo(newState, Actions.undo())).toEqual(initialState);
+      let changedState = JSON.parse(JSON.stringify(newState));
+      let newerState = play({...newState }, Actions.portCurrentAndWhiteBall());
+      expect(undo(newerState, Actions.undo())).toEqual(changedState);
     });
   });
 });

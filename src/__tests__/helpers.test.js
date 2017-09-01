@@ -73,6 +73,6 @@ describe('testing helpers', () => {
 
   it ('extract history', () => {
     let state = { players, balls, history: [] };
-    expect(Helpers.extractForHistory(state)).toEqual({ players, balls });
+    expect(JSON.parse(Helpers.extractForHistory(state))).toEqual({ players, balls });
   });
 });

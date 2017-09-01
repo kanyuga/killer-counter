@@ -6,22 +6,20 @@ import { mount } from 'enzyme';
 import * as sinon from "sinon";
 import { forEach } from "lodash";
 import { gameApp } from "../reducers";
-import {defaultGameState} from "../helpers";
+import {defaultGameState, getCurrentBall, getCurrentPlayer} from "../helpers";
 import {createStore} from "redux";
-import {addPlayer, startGame} from "../actions";
+import {addPlayer, hit, port, startGame} from "../actions";
 
 let confirmStub;
-let storageStub;
 let store;
-let initialState;
-beforeAll(() => {
+
+beforeEach(() => {
    confirmStub = sinon.stub(window, 'confirm');
    confirmStub.returns(true);
-   initialState = defaultGameState();
-   store = createStore(gameApp, initialState);
+   store = createStore(gameApp, defaultGameState());
 });
 
-afterAll(() => {
+afterEach(() => {
     confirmStub.restore();
 });
 
@@ -32,10 +30,9 @@ it ('renders without crashing', () => {
 
 describe ('add player', () => {
     const name = "Topher";
-    let app;
     let appWrapper;
     beforeEach (() => {
-        appWrapper = mount(<Provider store={store}><App /></Provider>);
+      appWrapper = mount(<Provider store={store}><App /></Provider>);
     });
     it ('as event', () => {
         const input = appWrapper.find('#player_name');
@@ -48,9 +45,9 @@ describe ('add player', () => {
 
 describe('delete player', () => {
     let appWrapper;
-    let app;
     beforeEach(() => {
-        [1, 2, 3, 4].forEach((i) => { store.dispatch(addPlayer("Player "+i))})
+      [1, 2, 3, 4].forEach((i) => { store.dispatch(addPlayer(`Player ${i}`))});
+      appWrapper = mount(<Provider store={store}><App /></Provider>);
     });
   
     /*it ('when only one player is left ', () => {
@@ -64,7 +61,7 @@ describe('delete player', () => {
     });*/
 
     it ('as event', () => {
-        appWrapper.update();
+        expect(store.getState().players[2].name).toEqual("Player 3");
         appWrapper.find('.btn.btn-danger').at(2).simulate('click');
         expect(store.getState().players[2].name).toEqual("Player 4");
     });
@@ -92,181 +89,147 @@ describe ('start game', () => {
 
 describe ('reset game', () => {
     let appWrapper;
-    let app;
     beforeEach (() => {
         appWrapper = mount(<Provider store={store}><App /></Provider>);
-        app = appWrapper.node;
         store.dispatch(addPlayer("Player One"));
         store.dispatch(addPlayer("Player Two"));
         store.dispatch(startGame());
         confirmStub.reset();
     });
 
-    it ('as event when game is not over', () => {
+    it ('when game is not over', () => {
         appWrapper.find('button.btn-outline-primary').simulate('click');
         expect(confirmStub.calledOnce).toEqual(true);
-        //expect(app.state).toEqual(app.defaultGameState()); //Not working for some reason
     });
 
-    it ('as event when game is over', () => {
+    it ('when game is over', () => {
         forEach(store.getState().balls, (ball) => {
-            ball.active = false;
+            store.dispatch(port(ball.number));
         });
         appWrapper.find('button.btn-outline-primary').simulate('click');
         expect(confirmStub.called).toEqual(false);
-        expect(app.state).toEqual(app.defaultGameState());
+        expect(store.getState()).toEqual(defaultGameState());
     });
 });
 
-describe ('player one hits a ball', () => {
-    const appWrapper = mount(<Provider store={store}><App /></Provider>);
-    app.addPlayer("Player 1");
-    app.addPlayer("Player 2");
-    store.dispatch(startGame());
-    appWrapper.find('button.btn-block.btn-info').simulate('click');
-    it ("player one should have zero points", () => {
-        expect(store.getState().players[0].points).toBe(0);
-    });
-
-    it ("player 2 should be the current player", () => {
-        expect(store.getState().currentPlayer).toBe(1);
-    });
-
-    it ("the current ball should be 3", () => {
-        expect(store.getState().currentBall).toBe(3);
-    });
-});
-
-describe ('player one ports a ball', () => {
-    const appWrapper = mount(<Provider store={store}><App /></Provider>);
-    const app = appWrapper.node;
+describe('play', () => {
+  let appWrapper;
+  beforeEach(() => {
+    appWrapper = mount(<Provider store={store}><App/></Provider>);
     store.dispatch(addPlayer("Player One"));
     store.dispatch(addPlayer("Player Two"));
     store.dispatch(startGame());
-    appWrapper.update();
-    appWrapper.find('button.btn-block.btn-success').simulate('click');
-    appWrapper.find('button.btn-ball').first().simulate('click');
-    it ("player one should have some points", () => {
-        expect(store.getState().players[0].points).toBeGreaterThan(0);
-    });
-    it ("player one should be the current player", () => {
-        expect(store.getState().currentPlayer).toBe(0);
-    });
-    it ("the current ball should be 4", () => {
-        expect(store.getState().currentBall).toBe(4);
+  });
+
+  describe ('player one hits a ball', () => {
+    beforeEach(() => {
+      appWrapper.find('button.btn-block.btn-info').simulate('click');
     });
 
-    it ("ballHasBeenPorted should be true", () => {
-        expect(app.ballHasBeenPorted(store.getState().balls)).toBeTruthy();
-    });
-});
-
-describe ("Player One misses the ball on the first move", () => {
-    const appWrapper = mount(<Provider store={store}><App /></Provider>);
-    store.dispatch(addPlayer("Player One"))
-    store.dispatch(addPlayer("Player Two"))
-    store.dispatch(startGame());
-    appWrapper.update();
-    appWrapper.find('button.btn-block.btn-danger').first().simulate('click');
-    const originalBall = store.getState().currentBall;
-    it ("player one should have 0 points since none has been ported", () => {
-       expect(appWrapper.state('players')[0].points).toEqual(0);
-    });
-    it ("player two should be the current player", () => {
-       expect(store.getState().currentPlayer).toBe(1);
-    });
-    it ("the current ball should be the same", () => {
-        expect(store.getState().currentBall).toBe(originalBall);
-    });
-
-
-});
-
-describe ("Player One misses the ball when one has been ported", () => {
-    const appWrapper = mount(<Provider store={store}><App /></Provider>);
-    const app = appWrapper.node;
-    store.dispatch(addPlayer("Player One"))
-    store.dispatch(addPlayer("Player Two"))
-    store.dispatch(startGame());
-    store.getState().currentPlayer = 0;
-    store.getState().balls[6].active = false;
-    appWrapper.update();
-
-    const originalBall = store.getState().currentBall;
-
-    appWrapper.find('button.btn-block.btn-danger').first().simulate('click');
-
-    it ("player one should have < 0 points since one has been ported already", () => {
-        expect(store.getState().players[0].points).toBe(-1 * store.getState().balls[originalBall].points);
-    });
-});
-
-describe ("Player One hits the wrong ball on the first move", () => {
-    const appWrapper = mount(<Provider store={store}><App /></Provider>);
-    const app = appWrapper.node;
-    store.dispatch(addPlayer("Player One"))
-    store.dispatch(addPlayer("Player Two"))
-    store.dispatch(startGame());
-    appWrapper.update();
-    appWrapper.find('button.btn-block.btn-danger').at(1).simulate('click');
-    appWrapper.find('button.btn-ball').at(1).simulate('click');
-    const originalBall = store.getState().currentBall;
-
-    it ("player one should have 0 points since none has been ported", () => {
-        expect(store.getState().players[0].points).toEqual(0);
+    it ("player one should have zero points", () => {
+      expect(store.getState().players[0].score).toBe(0);
     });
 
     it ("player 2 should be the current player", () => {
-        expect(store.getState().currentPlayer).toBe(1);
+      expect(getCurrentPlayer(store.getState().players)).toBe(1);
     });
 
     it ("the current ball should be 3", () => {
-        expect(store.getState().currentBall).toBe(originalBall);
+      expect(getCurrentBall(store.getState().balls)).toBe(3);
     });
-});
+  });
 
-describe ('Player One hits the wrong ball when one has been ported', () => {
-    const appWrapper = mount(<Provider store={store}><App /></Provider>);
-    const app = appWrapper.node;
-    store.dispatch(addPlayer("Player One"))
-    store.dispatch(addPlayer("Player Two"))
-    store.dispatch(startGame());
-    store.getState().currentPlayer = 0;
-    store.getState().balls[6].active = false;
-    appWrapper.update();
+  describe ('player one ports a ball', () => {
+    beforeEach(() => {
+      appWrapper.find('button.btn-block.btn-success').simulate('click');
+      appWrapper.find('button.btn-ball').first().simulate('click');
+    });
+    it ("player one should have some points", () => {
+      expect(store.getState().players[0].score).toBeGreaterThan(0);
+    });
+    it ("player one should be the current player", () => {
+      expect(getCurrentPlayer(store.getState().players)).toBe(0);
+    });
+    it ("the current ball should be 4", () => {
+      expect(getCurrentBall(store.getState().balls)).toBe(4);
+    });
 
-    appWrapper.find('button.btn-block.btn-danger').at(1).simulate('click');
-    appWrapper.find('button.btn-ball').at(1).simulate('click');
+  });
+
+  describe ("Player One misses the ball on the first move", () => {
+    beforeEach(() => {
+      appWrapper.find('button.btn-block.btn-danger').first().simulate('click');
+    });
+    it ("player one should have 0 points since none has been ported", () => {
+      expect(store.getState().players[0].score).toEqual(0);
+    });
+    it ("player two should be the current player", () => {
+      expect(getCurrentPlayer(store.getState().players)).toBe(1);
+    });
+    it ("the current ball should be the same", () => {
+      const originalBall = getCurrentBall(store.getState().balls);
+      expect(getCurrentBall(store.getState().balls)).toBe(originalBall);
+    });
+  });
+
+
+  describe ("Player One misses the ball when one has been ported", () => {
+    let originalBall;
+
+    beforeEach(() => {
+      store.dispatch(hit());
+      store.dispatch(port(7));
+      store.dispatch(hit());
+      appWrapper.update();
+      originalBall = getCurrentBall(store.getState().balls);
+      appWrapper.find('button.btn-block.btn-danger').first().simulate('click');
+    });
 
     it ("player one should have < 0 points since one has been ported already", () => {
-        expect(store.getState().players[0].points).toEqual(-4);
+      expect(store.getState().players[0].score).toBe(-1 * store.getState().balls[originalBall].points);
     });
+  });
+
+  describe ("Player One hits the wrong ball on the first move", () => {
+    let originalBall;
+    beforeEach(() => {
+      originalBall = getCurrentBall(store.getState().balls);
+      appWrapper.find('button.btn-block.btn-danger').at(1).simulate('click');
+      appWrapper.find('button.btn-ball').at(1).simulate('click');
+    });
+    it ('player one should have zero points', () => {
+      expect(store.getState().players[0].score).toEqual(0);
+    });
+    it ('player two should be the current player', () => {
+      expect(getCurrentPlayer(store.getState().players)).toBe(1);
+    });
+    it ('the current balls should be the same', () => {
+      expect(getCurrentBall(store.getState().balls)).toBe(originalBall);
+    });
+
+  });
+
+  describe ('Player One hits the wrong ball when one has been ported', () => {
+    beforeEach(() => {
+      store.dispatch(hit());
+      store.dispatch(port(6));
+      store.dispatch(hit());
+      appWrapper.find('button.btn-block.btn-danger').at(1).simulate('click');
+      appWrapper.find('button.btn-ball').at(1).simulate('click');
+    });
+    it ("player one should have < 0 points since one has been ported already", () => {
+      expect(store.getState().players[0].score).toEqual(-4);
+    });
+  });
+
+  describe('Player ports the current ball and then ports the white ball', () => {
+    it ('as event', () => {
+      appWrapper.find('button.btn-danger').at(2).simulate('click');
+      expect(store.getState().balls[3].active).toEqual(false);
+      expect(store.getState().players[0].score).toEqual(0);
+    });
+  });
 });
 
-describe('Player ports the current ball and then ports the white ball', () => {
-    let appWrapper;
-    let app;
-    beforeEach (() =>{
-        appWrapper = mount(<Provider store={store}><App /></Provider>);
-        app = appWrapper.node;
-        store.dispatch(addPlayer("Player One"))
-        store.dispatch(addPlayer("Player Two"))
-        store.dispatch(startGame());
-    });
-    it ('as function', () => {
-        app.play('portCurrentBallAndWhiteBall');
-        const state = app.state;
-        expect(state.currentPlayer).toEqual(1);
-        expect(state.balls[3].active).toEqual(false);
-        expect(state.players[0].points).toEqual(0);
-        expect(state.currentBall).toEqual(4);
-    });
-    it ('as event', () => {
-        appWrapper.find('button.btn-danger').at(2).simulate('click');
-        const state = app.state;
-        expect(state.currentPlayer).toEqual(1);
-        expect(state.balls[3].active).toEqual(false);
-        expect(state.players[0].points).toEqual(0);
-        expect(state.currentBall).toEqual(4);
-    });
-});
+
+

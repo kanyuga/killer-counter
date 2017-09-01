@@ -102,7 +102,6 @@ export function undo(state, action) {
   if (action.type === Actions.UNDO) {
     const prevState = JSON.parse(newState.history.pop());
     prevState.history = newState.history.slice();
-    console.log(prevState);
     return prevState;
   }
   return state;
