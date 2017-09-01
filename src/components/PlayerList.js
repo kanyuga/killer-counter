@@ -1,30 +1,42 @@
 import React from 'react';
 import Button from './Button';
+import { connect } from "react-redux";
+import { deletePlayer } from "../actions";
 
-export default function PlayerList(props) {
-    const isLeaderboard = !props.hasOwnProperty('onDelete');
-    return (
-        <div>
-            <table className="table table-inverse">
-                <tbody>
-                {props.players.map((player, i) => {
-                    let className = !player.active
-                        ? 'text-muted eliminated-player'
-                        : (i === props.currentPlayer && !isLeaderboard ? 'bg-info current-player' : '');
+let PlayerList = (props) => {
+  let players = props.players.slice();
+  const isLeaderboard = props.hasOwnProperty('sorted');
+  if (isLeaderboard) {
+    players = players.sort((player1, player2) => player2.score - player1.score);
+  }
+  return (
+    <div>
+      <table className="table table-inverse">
+        <tbody>
+        {players.map((player, i) => {
+          let className = !player.active
+            ? 'text-muted eliminated-player'
+            : (player.current && !isLeaderboard ? 'bg-info current-player' : '');
 
-                    return <tr key={i} className={className}>
-                        <td>{player.name}:</td>
-                        <td className="text-right">
-                            {player.points} &nbsp;
-                            {!isLeaderboard
-                                ? <Button onClick={() => props.onDelete(i)} title="&times;" context="danger" size="sm"/>
-                                : null
-                            }
-                        </td>
-                    </tr>
-                })}
-                </tbody>
-            </table>
-        </div>
-    );
+          return <tr key={i} className={className}>
+            <td>{player.name}:</td>
+            <td className="text-right">
+              {player.score} &nbsp;
+              {!isLeaderboard
+                ? <Button onClick={() => props.onDelete(i)} title="&times;" context="danger" size="sm"/>
+                : null
+              }
+            </td>
+          </tr>
+        })}
+        </tbody>
+      </table>
+    </div>
+  );
 };
+
+const mapStateToProps = state => ({ players: state.players });
+const mapDispatchToProps = dispatch => ({ onDelete: id => dispatch(deletePlayer(id))});
+
+PlayerList = connect(mapStateToProps, mapDispatchToProps)(PlayerList);
+export default PlayerList;
