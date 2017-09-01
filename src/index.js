@@ -30,12 +30,6 @@ const updateLocalStorage = store => next => action => {
   return result;
 };
 
-const updateHistory = store => next => action => {
-  const result = next(action);
-
-  return result;
-};
-
 let store = createStore(gameApp, initialState, applyMiddleware(updateLocalStorage));
 
 ReactDOM.render(

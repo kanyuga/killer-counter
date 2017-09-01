@@ -4,12 +4,16 @@ import { connect } from "react-redux";
 import { deletePlayer } from "../actions";
 
 let PlayerList = (props) => {
-  const isLeaderboard = !props.hasOwnProperty('onDelete');
+  let players = props.players.slice();
+  const isLeaderboard = props.hasOwnProperty('sorted');
+  if (isLeaderboard) {
+    players = players.sort((player1, player2) => player2.score - player1.score);
+  }
   return (
     <div>
       <table className="table table-inverse">
         <tbody>
-        {props.players.map((player, i) => {
+        {players.map((player, i) => {
           let className = !player.active
             ? 'text-muted eliminated-player'
             : (player.current && !isLeaderboard ? 'bg-info current-player' : '');

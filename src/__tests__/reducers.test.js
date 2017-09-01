@@ -1,5 +1,5 @@
 import { createStore } from 'redux';
-import { gameApp, play, players, resetGame, started } from '../reducers';
+import {gameApp, play, players, resetGame, started, undo} from '../reducers';
 import { defaultGameState } from "../helpers"
 import * as Actions from "../actions";
 
@@ -47,6 +47,7 @@ describe('unit tests', () => {
       const result = play(state, Actions.hit());
       expect(result.players[2].current).toBe(true);
       expect(result.balls[3].current).toBe(true);
+      expect(result.history.length).toBe(1);
     });
 
     it ('port', () => {
@@ -55,6 +56,7 @@ describe('unit tests', () => {
       expect(result.balls[3].active).toBe(false);
       expect(result.players[1].score).toBe(6);
       expect(result.balls[4].current).toBe(true);
+      expect(result.history.length).toBe(1);
     });
 
     it ('miss when none has been ported', () => {
@@ -62,6 +64,7 @@ describe('unit tests', () => {
       expect(result.players[2].current).toBe(true);
       expect(result.balls[3].current).toBe(true);
       expect(result.players[1].score).toBe(0);
+      expect(result.history.length).toBe(1);
     });
 
     it ('miss', () => {
@@ -70,6 +73,7 @@ describe('unit tests', () => {
       expect(result.players[2].current).toBe(true);
       expect(result.balls[3].current).toBe(true);
       expect(result.players[1].score).toBe(-6);
+      expect(result.history.length).toBe(1);
     });
 
     it ('foul port when none has been ported', () => {
@@ -78,6 +82,7 @@ describe('unit tests', () => {
       expect(result.balls[3].current).toBe(true);
       expect(result.players[1].score).toBe(0);
       expect(result.balls[5].active).toBe(true);
+      expect(result.history.length).toBe(1);
     });
 
     it ('foul port', () => {
@@ -87,6 +92,7 @@ describe('unit tests', () => {
       expect(result.balls[3].current).toBe(true);
       expect(result.players[1].score).toBe(-5);
       expect(result.balls[5].active).toBe(true);
+      expect(result.history.length).toBe(1);
     });
 
     it ('port current ball and white ball', () => {
@@ -95,6 +101,14 @@ describe('unit tests', () => {
       expect(result.balls[3].active).toBe(false);
       expect(result.players[1].score).toBe(0);
       expect(result.balls[4].current).toBe(true);
+      expect(result.history.length).toBe(1);
+    });
+
+    it ('undo', () => {
+      let newState = play(state, Actions.portCurrentAndWhiteBall());
+      expect(undo(newState, Actions.undo())).toEqual(state);
+      let newerState = play(newState, Actions.portCurrentAndWhiteBall());
+      expect(undo(newerState, Actions.undo())).toEqual(newState);
     });
   });
 });

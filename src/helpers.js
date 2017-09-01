@@ -77,3 +77,14 @@ export function switchNextPlayer(players, currentPlayer) {
 export function ballPorted(balls) {
   return Object.keys(balls).filter(number => !balls[number].active).length > 0;
 }
+
+export function extractForHistory(state) {
+  state = {...state};
+  delete state.history;
+  return JSON.stringify(state);
+}
+
+export const playLogClasses = {
+  success: 'text-success',
+  fail: 'text-danger'
+};

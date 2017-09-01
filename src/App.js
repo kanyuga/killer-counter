@@ -8,12 +8,10 @@ import PlayerList from './components/PlayerList';
 import PlayerModal from './components/PlayerModal';
 
 import './App.css';
-import {hit, miss, newGame, portCurrentAndWhiteBall, startGame} from "./actions";
-import {getCurrentBall, getCurrentPlayer, getMaxScore, pointsLeft} from "./helpers";
+import {hit, miss, newGame, portCurrentAndWhiteBall, startGame, undo} from "./actions";
+import {getCurrentBall, getCurrentPlayer, getMaxScore, playLogClasses, pointsLeft} from "./helpers";
 
 class App extends Component {
-
-  ballCount = 15;
 
   constructor(props) {
     super(props);
@@ -29,24 +27,11 @@ class App extends Component {
 
   winner = () => {
     const maxScore = getMaxScore(this.props.players);
-    return this.props.players.filter((player) => player.points === maxScore)[0];
+    return this.props.players.filter((player) => player.score === maxScore)[0];
   };
 
   gameOver = () => {
     return pointsLeft(this.props.balls) === 0;
-  };
-
-  addLogEntry = (log, type='none') => {
-    const playLog = this.props.playLog.slice();
-    playLog.push({ log, type });
-    return playLog;
-  };
-
-  undo = () => {
-    const history = this.props.history.slice(0, -1);
-    const prevState = JSON.parse(history[history.length - 1]);
-    prevState.history = history;
-    this.setState(prevState);
   };
 
   resetGame = () => {
@@ -123,7 +108,7 @@ class App extends Component {
                 <PlayerList />
                 {this.props.started
                   ? <div>
-                    <Button onClick = {() => this.props.dispatch(newGame())} outline context="primary" title="New Game"/>
+                    <Button onClick = {this.resetGame} outline context="primary" title="New Game"/>
                     &nbsp;
                     <button type="button" className="btn btn-outline-info" data-toggle="modal" data-target="#playerModal">
                       Add Players
@@ -139,10 +124,10 @@ class App extends Component {
               </div>
               <div className="tab-pane" id="play-log" role="tabpanel">
                 <ol className="play-log">
-                  {this.props.playLog.map((playLog, i) => <li className={playLog.type} key={i}>{ playLog.log }</li>)}
+                  {this.props.playLog.map((playLog, i) => <li className={playLogClasses[playLog.type]} key={i}>{ playLog.log }</li>)}
                 </ol>
-                { this.props.history.length > 1
-                  ? <Button onClick = { this.undo } block outline context="warning" title='Undo'/>
+                { this.props.history.length
+                  ? <Button onClick = {() => this.props.dispatch(undo()) } block outline context="warning" title='Undo'/>
                   : null
                 }
               </div>

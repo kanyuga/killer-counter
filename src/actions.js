@@ -8,7 +8,11 @@ export const PLAY_MISS = 'PLAY_MISS';
 export const PLAY_HIT = 'PLAY_HIT';
 export const PLAY_FOUL_PORT = 'PLAY_FOUL_PORT';
 export const PLAY_PORT_CURRENT_AND_WHITE_BALL = 'PLAY_PORT_CURRENT_AND_WHITE_BALL';
+export const UNDO = 'UNDO';
 
+export function undo() {
+  return { type: UNDO };
+}
 
 export function addPlayer(name) {
   return { type: ADD_PLAYER, name };

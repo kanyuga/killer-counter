@@ -69,5 +69,10 @@ describe('testing helpers', () => {
 
   it('balls ported', () => {
     expect(Helpers.ballPorted(balls)).toBe(true);
-  })
+  });
+
+  it ('extract history', () => {
+    let state = { players, balls, history: [] };
+    expect(Helpers.extractForHistory(state)).toEqual({ players, balls });
+  });
 });
