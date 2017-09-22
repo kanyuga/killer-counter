@@ -111,7 +111,7 @@ export function gameApp(state, action) {
   if (action.type.endsWith('PLAYER')) {
     state = {...state, players: players(state.players, action) };
   } else if (action.type.startsWith('PLAY_')) {
-    state = {...state, ...play(state, action) };
+    state = play(state, action);
   } else if (action.type === Actions.START_GAME) {
     state = {...state, started: started(state.started, action) };
   } else if (action.type === Actions.NEW_GAME) {

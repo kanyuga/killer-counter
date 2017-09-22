@@ -2,6 +2,7 @@ import { createStore } from 'redux';
 import {gameApp, play, players, resetGame, started, undo} from '../reducers';
 import { defaultGameState } from "../helpers"
 import * as Actions from "../actions";
+import { cloneDeep } from 'lodash';
 
 function resetState() {
   const state = defaultGameState();
@@ -125,6 +126,10 @@ describe('store tests', () => {
     store = createStore(gameApp, defaultGameState());
   });
 
+  afterEach(() => {
+    store = null;
+  });
+
   it ('add player', () => {
     store.dispatch(Actions.addPlayer('Player 1'));
     expect(store.getState().players.length).toEqual(1);
@@ -214,6 +219,19 @@ describe('store tests', () => {
       expect(store.getState().players[0].score).toBe(0);
       expect(store.getState().players[1].current).toBe(true);
     });
+
+    it ('undo', () => {
+      const initialState = cloneDeep(store.getState());
+      store.dispatch(Actions.port(3));
+      const secondState = cloneDeep(store.getState());
+      expect(initialState).not.toEqual(secondState);
+      store.dispatch(Actions.hit());
+      store.dispatch(Actions.undo());
+      expect(store.getState()).toEqual(secondState);
+      store.dispatch(Actions.undo());
+      expect(store.getState()).toEqual(initialState);
+    });
+
   });
 });
 
