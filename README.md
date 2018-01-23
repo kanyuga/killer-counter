@@ -6,7 +6,7 @@ This is an attempt to create a log for killer.
 
 ### How to Setup and Contribute
 
-- For the repo
+- Fork the repo
 - `git clone` your fork
 - Add this repo as a remote to make rebasing easier: `git remote add kanyuga https://github.com/kanyuga/killer-counter.git`
 - `git checkout -b <branch-name>`
